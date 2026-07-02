@@ -38,9 +38,7 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center font-bold text-white text-base tracking-tighter border border-white/20">
-            T
-          </div>
+          <img src="/Logo.png" alt="Testify" className="w-8 h-8 object-contain rounded-xl" />
           <span className="font-extrabold text-lg tracking-tight text-white">Testify</span>
           <span className="text-[9px] bg-white/20 text-white font-extrabold px-2 py-0.5 rounded-full font-mono">Offline-First</span>
         </div>
@@ -63,10 +61,10 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
 
           <div className="text-center space-y-2.5 max-w-sm">
             <h2 className="text-2xl font-black text-white tracking-tight">
-              Unleash Perfect Performance
+              Practice Smarter
             </h2>
             <p className="text-sm text-blue-100/80 leading-relaxed">
-              Track your mock exam histories, bookmark complex problems, and curate your personalized mistake notebook on this device.
+              Solve past exam papers, bookmark tricky physics & chemistry questions, and save your mistakes to revise before the real test.
             </p>
           </div>
         </div>
@@ -75,12 +73,12 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
         <div className="relative z-10 flex items-center gap-4 text-xs text-blue-200/60 font-semibold font-mono tracking-wider uppercase">
           <div className="flex items-center gap-1.5">
             <Award className="w-4 h-4 text-blue-300" />
-            <span>2026 JEE Syllabus Ready</span>
+            <span>Syllabus Covered</span>
           </div>
           <span className="opacity-40">|</span>
           <div className="flex items-center gap-1.5">
             <Target className="w-4 h-4 text-blue-300" />
-            <span>Precision Analysis</span>
+            <span>Score Analysis</span>
           </div>
         </div>
       </div>
@@ -93,9 +91,7 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
           {/* Mobile brand header (hidden on desktop) */}
           <div className="flex lg:hidden items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-900">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-sm tracking-tighter">
-                T
-              </div>
+              <img src="/Logo.png" alt="Testify" className="w-7 h-7 object-contain rounded-lg" />
               <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
             </div>
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
@@ -108,13 +104,13 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
           <div className="space-y-2 text-left">
             <div className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
               <Sparkles className="w-3 h-3" />
-              <span>Personalized JEE Practice Panel</span>
+              <span>JEE Physics, Chemistry & Math Prep</span>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
               Welcome to Testify
             </h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Enter your display name below to begin your personalized mock exam practice journey. All metrics are persisted safely in your browser.
+              Enter your name to begin practicing. Your scores, bookmarks, and revision notes will be saved directly on your browser.
             </p>
           </div>
 
@@ -161,22 +157,22 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
               <div className="mx-auto w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <BookOpen className="w-4 h-4" />
               </div>
-              <p className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">1000+ PYQs</p>
-              <p className="text-[9px] text-zinc-400">JEE Standard Questions</p>
+              <p className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">1000+ JEE PYQs</p>
+              <p className="text-[9px] text-zinc-400">Physics, Chem & Maths</p>
             </div>
             <div className="space-y-1">
               <div className="mx-auto w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
                 <Zap className="w-4 h-4" />
               </div>
-              <p className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">Instant Metrics</p>
-              <p className="text-[9px] text-zinc-400">Analytical Performance</p>
+              <p className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">Instant Score</p>
+              <p className="text-[9px] text-zinc-400">Check speed & accuracy</p>
             </div>
             <div className="space-y-1">
               <div className="mx-auto w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <Target className="w-4 h-4" />
               </div>
               <p className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200">Mistake Book</p>
-              <p className="text-[9px] text-zinc-400">Track and Retry Errors</p>
+              <p className="text-[9px] text-zinc-400">Save & revise wrong answers</p>
             </div>
           </div>
 
