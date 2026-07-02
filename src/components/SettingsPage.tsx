@@ -20,9 +20,6 @@ interface SettingsPageProps {
   onResetApp: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
-  isSupabaseUser?: boolean;
-  supabaseEmail?: string;
-  onSignOut?: () => void;
 }
 
 export default function SettingsPage({
@@ -30,10 +27,7 @@ export default function SettingsPage({
   onUpdateUsername,
   onResetApp,
   darkMode,
-  onToggleDarkMode,
-  isSupabaseUser = false,
-  supabaseEmail,
-  onSignOut
+  onToggleDarkMode
 }: SettingsPageProps) {
   
   const [nameInput, setNameInput] = useState(username);
@@ -124,26 +118,7 @@ export default function SettingsPage({
               <User className="w-5 h-5 text-blue-600" />
               <h3 className="font-bold text-sm">Student Profile</h3>
             </div>
-            {isSupabaseUser && onSignOut && (
-              <button 
-                onClick={onSignOut}
-                className="px-3 py-1.5 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 rounded-xl text-[10px] font-bold hover:bg-red-50 dark:hover:bg-red-950/20 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out from Cloud</span>
-              </button>
-            )}
           </div>
-
-          {isSupabaseUser && supabaseEmail && (
-            <div className="flex items-center gap-2 text-xs bg-zinc-50 dark:bg-zinc-950 p-3 rounded-2xl border border-zinc-200/45 dark:border-zinc-850 max-w-lg">
-              <Mail className="w-4 h-4 text-blue-500" />
-              <div className="space-y-0.5">
-                <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Cloud Connected Account</div>
-                <div className="font-semibold text-zinc-700 dark:text-zinc-300">{supabaseEmail}</div>
-              </div>
-            </div>
-          )}
 
           <form onSubmit={handleSaveName} className="flex flex-col sm:flex-row items-end gap-3 max-w-lg">
             <div className="flex-1 space-y-1 text-left w-full">

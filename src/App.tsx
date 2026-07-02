@@ -27,7 +27,6 @@ import {
   SubjectType 
 } from "./types";
 import { getQuestionBank } from "./data/questions";
-import { supabase, isSupabaseConfigured, fetchUserProfile, saveUserProfile } from "./lib/supabase";
 
 // Pages
 import Dashboard from "./components/Dashboard";
@@ -45,8 +44,6 @@ export default function App() {
   // Authentication / Profile
   const [username, setUsername] = useState<string>("");
   const [isFirstVisit, setIsFirstVisit] = useState(true);
-  const [supabaseUser, setSupabaseUser] = useState<any>(null);
-  const [isSupabaseLoading, setIsSupabaseLoading] = useState<boolean>(true);
 
   // Layout View State
   const [currentView, setCurrentView] = useState<string>("dashboard");
@@ -66,8 +63,8 @@ export default function App() {
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
 
-  // Sync State utility to keep LocalStorage & Supabase both securely updated
-  const syncState = async (
+  // Sync State utility to keep LocalStorage securely updated
+  const syncState = (
     nextUsername: string,
     nextHistory: TestResult[],
     nextBookmarks: string[],
@@ -83,19 +80,9 @@ export default function App() {
     } else {
       localStorage.removeItem("testify_active_test_session");
     }
-
-    if (supabaseUser) {
-      await saveUserProfile(supabaseUser.id, {
-        username: nextUsername,
-        test_history: nextHistory,
-        bookmarks: nextBookmarks,
-        mistake_notes: nextMistakes,
-        active_test_session: nextActiveTest
-      });
-    }
   };
 
-  // 1. Initial configuration load
+  // Initial configuration and local state load
   useEffect(() => {
     // Theme setup
     const savedTheme = localStorage.getItem("testify_theme");
@@ -107,150 +94,43 @@ export default function App() {
       document.documentElement.classList.remove("dark");
     }
 
+    // Name setup
+    const name = localStorage.getItem("testify_username");
+    if (name) {
+      setUsername(name);
+      setIsFirstVisit(false);
+    }
+
     // Question bank
     const qBank = getQuestionBank();
     setQuestionBank(qBank);
-  }, []);
 
-  // 2. Supabase Auth state listener and cloud profile retrieval
-  useEffect(() => {
-    if (!supabase) {
-      // Offline mode load fallbacks if Supabase is not configured yet
-      const offlineName = localStorage.getItem("testify_username");
-      if (offlineName) {
-        setUsername(offlineName);
-        setIsFirstVisit(false);
-      }
+    // Load History, Bookmarks, Mistakes
+    try {
+      const historyStr = localStorage.getItem("testify_test_history");
+      if (historyStr) setTestHistory(JSON.parse(historyStr));
 
-      try {
-        const historyStr = localStorage.getItem("testify_test_history");
-        if (historyStr) setTestHistory(JSON.parse(historyStr));
+      const bookmarksStr = localStorage.getItem("testify_bookmarks");
+      if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
 
-        const bookmarksStr = localStorage.getItem("testify_bookmarks");
-        if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
-
-        const mistakesStr = localStorage.getItem("testify_mistake_notes");
-        if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
-      } catch (e) {
-        console.error("Failed to parse local offline profile states:", e);
-      }
-
-      const activeSessionStr = localStorage.getItem("testify_active_test_session");
-      if (activeSessionStr) {
-        try {
-          const session: ActiveTestState = JSON.parse(activeSessionStr);
-          if (session && session.timeRemaining > 0 && !session.isSubmitted) {
-            setActiveTest(session);
-            setShowResumeBanner(true);
-          }
-        } catch (e) {}
-      }
-
-      setIsSupabaseLoading(false);
-      return;
+      const mistakesStr = localStorage.getItem("testify_mistake_notes");
+      if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
+    } catch (e) {
+      console.error("Failed to parse local profile states:", e);
     }
 
-    // Initial session retrieval
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        loadCloudProfile(session.user.id);
-      } else {
-        // Fallback to local storage offline states if no user is signed in
-        const name = localStorage.getItem("testify_username");
-        if (name) {
-          setUsername(name);
-          setIsFirstVisit(false);
-        }
-
-        try {
-          const historyStr = localStorage.getItem("testify_test_history");
-          if (historyStr) setTestHistory(JSON.parse(historyStr));
-
-          const bookmarksStr = localStorage.getItem("testify_bookmarks");
-          if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
-
-          const mistakesStr = localStorage.getItem("testify_mistake_notes");
-          if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
-        } catch (e) {}
-
-        const activeSessionStr = localStorage.getItem("testify_active_test_session");
-        if (activeSessionStr) {
-          try {
-            const session: ActiveTestState = JSON.parse(activeSessionStr);
-            if (session && session.timeRemaining > 0 && !session.isSubmitted) {
-              setActiveTest(session);
-              setShowResumeBanner(true);
-            }
-          } catch (e) {}
-        }
-        setIsSupabaseLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setSupabaseUser(session.user);
-          loadCloudProfile(session.user.id);
-        } else {
-          setSupabaseUser(null);
-          setIsSupabaseLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadCloudProfile = async (userId: string) => {
-    setIsSupabaseLoading(true);
-    try {
-      const profile = await fetchUserProfile(userId);
-      if (profile) {
-        setUsername(profile.username || "Student");
-        setTestHistory(profile.test_history || []);
-        setBookmarks(profile.bookmarks || []);
-        setMistakeNotes(profile.mistake_notes || {});
-        setActiveTest(profile.active_test_session || null);
-        if (profile.active_test_session && profile.active_test_session.timeRemaining > 0 && !profile.active_test_session.isSubmitted) {
+    // Resumable Session check
+    const activeSessionStr = localStorage.getItem("testify_active_test_session");
+    if (activeSessionStr) {
+      try {
+        const session: ActiveTestState = JSON.parse(activeSessionStr);
+        if (session && session.timeRemaining > 0 && !session.isSubmitted) {
+          setActiveTest(session);
           setShowResumeBanner(true);
         }
-        setIsFirstVisit(false);
-      }
-    } catch (e) {
-      console.error("Error loading cloud profile", e);
-    } finally {
-      setIsSupabaseLoading(false);
+      } catch (e) {}
     }
-  };
-
-  const handleSupabaseAuthSuccess = (user: any, profile: any) => {
-    setSupabaseUser(user);
-    setUsername(profile.username);
-    setTestHistory(profile.test_history);
-    setBookmarks(profile.bookmarks);
-    setMistakeNotes(profile.mistake_notes);
-    setActiveTest(profile.active_test_session);
-    if (profile.active_test_session && profile.active_test_session.timeRemaining > 0 && !profile.active_test_session.isSubmitted) {
-      setShowResumeBanner(true);
-    }
-    setIsFirstVisit(false);
-  };
-
-  const handleSignOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-    setSupabaseUser(null);
-    setUsername("");
-    setTestHistory([]);
-    setBookmarks([]);
-    setMistakeNotes({});
-    setActiveTest(null);
-    setIsFirstVisit(true);
-    setCurrentView("dashboard");
-  };
+  }, []);
 
   // Sync Dark mode toggles
   const toggleDarkMode = () => {
@@ -501,16 +381,7 @@ export default function App() {
   };
 
   // Reset System Hard Reset
-  const handleResetApp = async () => {
-    if (supabaseUser) {
-      await saveUserProfile(supabaseUser.id, {
-        username: "Student",
-        test_history: [],
-        bookmarks: [],
-        mistake_notes: {},
-        active_test_session: null
-      });
-    }
+  const handleResetApp = () => {
     localStorage.clear();
     setUsername("");
     setIsFirstVisit(true);
@@ -522,20 +393,10 @@ export default function App() {
     window.location.reload();
   };
 
-  if (isSupabaseLoading) {
-    return (
-      <div className="fixed inset-0 bg-[#FAFAFA] dark:bg-zinc-950 flex flex-col items-center justify-center gap-4 z-[200]">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 font-mono tracking-widest uppercase">Connecting to Cloud...</p>
-      </div>
-    );
-  }
-
   if (isFirstVisit) {
     return (
       <WelcomePage 
         onNameSubmitted={handleNameSubmitted} 
-        onSupabaseAuthSuccess={handleSupabaseAuthSuccess}
       />
     );
   }
@@ -598,15 +459,6 @@ export default function App() {
                 ? stateOrUpdater(prev) 
                 : stateOrUpdater;
               localStorage.setItem("testify_active_test_session", JSON.stringify(nextState));
-              if (supabaseUser) {
-                saveUserProfile(supabaseUser.id, {
-                  username,
-                  test_history: testHistory,
-                  bookmarks,
-                  mistake_notes: mistakeNotes,
-                  active_test_session: nextState
-                });
-              }
               return nextState;
             });
           }}
@@ -798,9 +650,6 @@ export default function App() {
                     onResetApp={handleResetApp}
                     darkMode={darkMode}
                     onToggleDarkMode={toggleDarkMode}
-                    isSupabaseUser={!!supabaseUser}
-                    supabaseEmail={supabaseUser?.email}
-                    onSignOut={handleSignOut}
                   />
                 )}
 

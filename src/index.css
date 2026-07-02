@@ -11,6 +11,8 @@
   --color-zinc-850: #1f1f23;
 }
 
+@variant dark (&:where(.dark, .dark *));
+
 /* Print Specific Overrides */
 @media print {
   body {
