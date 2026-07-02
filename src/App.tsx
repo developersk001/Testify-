@@ -27,6 +27,7 @@ import {
   SubjectType 
 } from "./types";
 import { getQuestionBank } from "./data/questions";
+import { LOGO_URL } from "./constants";
 
 // Pages
 import Dashboard from "./components/Dashboard";
@@ -477,7 +478,7 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
                     <img 
-                      src="/Logo.png" 
+                      src={LOGO_URL} 
                       alt="Testify Logo" 
                       className="absolute inset-0 w-full h-full rounded-lg object-cover z-10"
                       referrerPolicy="no-referrer"

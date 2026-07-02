@@ -9,6 +9,7 @@ import {
   Target
 } from "lucide-react";
 import { motion } from "motion/react";
+import { LOGO_URL } from "../constants";
 
 interface WelcomePageProps {
   onNameSubmitted: (name: string) => void;
@@ -38,7 +39,7 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
-          <img src="/Logo.png" alt="Testify" className="w-8 h-8 object-contain rounded-xl" />
+          <img src={LOGO_URL} alt="Testify" className="w-8 h-8 object-contain rounded-xl" />
           <span className="font-extrabold text-lg tracking-tight text-white">Testify</span>
           <span className="text-[9px] bg-white/20 text-white font-extrabold px-2 py-0.5 rounded-full font-mono">Offline-First</span>
         </div>
@@ -91,7 +92,7 @@ export default function WelcomePage({ onNameSubmitted }: WelcomePageProps) {
           {/* Mobile brand header (hidden on desktop) */}
           <div className="flex lg:hidden items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-900">
             <div className="flex items-center gap-2">
-              <img src="/Logo.png" alt="Testify" className="w-7 h-7 object-contain rounded-lg" />
+              <img src={LOGO_URL} alt="Testify" className="w-7 h-7 object-contain rounded-lg" />
               <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
             </div>
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
