@@ -27,6 +27,7 @@ import {
   SubjectType 
 } from "./types";
 import { getQuestionBank } from "./data/questions";
+import { supabase, isSupabaseConfigured, fetchUserProfile, saveUserProfile } from "./lib/supabase";
 
 // Pages
 import Dashboard from "./components/Dashboard";
@@ -44,6 +45,8 @@ export default function App() {
   // Authentication / Profile
   const [username, setUsername] = useState<string>("");
   const [isFirstVisit, setIsFirstVisit] = useState(true);
+  const [supabaseUser, setSupabaseUser] = useState<any>(null);
+  const [isSupabaseLoading, setIsSupabaseLoading] = useState<boolean>(true);
 
   // Layout View State
   const [currentView, setCurrentView] = useState<string>("dashboard");
@@ -63,7 +66,36 @@ export default function App() {
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
 
-  // Initialize and load state
+  // Sync State utility to keep LocalStorage & Supabase both securely updated
+  const syncState = async (
+    nextUsername: string,
+    nextHistory: TestResult[],
+    nextBookmarks: string[],
+    nextMistakes: Record<string, string>,
+    nextActiveTest: ActiveTestState | null
+  ) => {
+    localStorage.setItem("testify_username", nextUsername);
+    localStorage.setItem("testify_test_history", JSON.stringify(nextHistory));
+    localStorage.setItem("testify_bookmarks", JSON.stringify(nextBookmarks));
+    localStorage.setItem("testify_mistake_notes", JSON.stringify(nextMistakes));
+    if (nextActiveTest) {
+      localStorage.setItem("testify_active_test_session", JSON.stringify(nextActiveTest));
+    } else {
+      localStorage.removeItem("testify_active_test_session");
+    }
+
+    if (supabaseUser) {
+      await saveUserProfile(supabaseUser.id, {
+        username: nextUsername,
+        test_history: nextHistory,
+        bookmarks: nextBookmarks,
+        mistake_notes: nextMistakes,
+        active_test_session: nextActiveTest
+      });
+    }
+  };
+
+  // 1. Initial configuration load
   useEffect(() => {
     // Theme setup
     const savedTheme = localStorage.getItem("testify_theme");
@@ -75,43 +107,150 @@ export default function App() {
       document.documentElement.classList.remove("dark");
     }
 
-    // Name setup
-    const name = localStorage.getItem("testify_username");
-    if (name) {
-      setUsername(name);
-      setIsFirstVisit(false);
-    }
-
     // Question bank
     const qBank = getQuestionBank();
     setQuestionBank(qBank);
+  }, []);
 
-    // Load History, Bookmarks, Mistakes
-    try {
-      const historyStr = localStorage.getItem("testify_test_history");
-      if (historyStr) setTestHistory(JSON.parse(historyStr));
+  // 2. Supabase Auth state listener and cloud profile retrieval
+  useEffect(() => {
+    if (!supabase) {
+      // Offline mode load fallbacks if Supabase is not configured yet
+      const offlineName = localStorage.getItem("testify_username");
+      if (offlineName) {
+        setUsername(offlineName);
+        setIsFirstVisit(false);
+      }
 
-      const bookmarksStr = localStorage.getItem("testify_bookmarks");
-      if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
+      try {
+        const historyStr = localStorage.getItem("testify_test_history");
+        if (historyStr) setTestHistory(JSON.parse(historyStr));
 
-      const mistakesStr = localStorage.getItem("testify_mistake_notes");
-      if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
-    } catch (e) {
-      console.error("Failed to parse local profile states:", e);
+        const bookmarksStr = localStorage.getItem("testify_bookmarks");
+        if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
+
+        const mistakesStr = localStorage.getItem("testify_mistake_notes");
+        if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
+      } catch (e) {
+        console.error("Failed to parse local offline profile states:", e);
+      }
+
+      const activeSessionStr = localStorage.getItem("testify_active_test_session");
+      if (activeSessionStr) {
+        try {
+          const session: ActiveTestState = JSON.parse(activeSessionStr);
+          if (session && session.timeRemaining > 0 && !session.isSubmitted) {
+            setActiveTest(session);
+            setShowResumeBanner(true);
+          }
+        } catch (e) {}
+      }
+
+      setIsSupabaseLoading(false);
+      return;
     }
 
-    // Resumable Session check
-    const activeSessionStr = localStorage.getItem("testify_active_test_session");
-    if (activeSessionStr) {
-      try {
-        const session: ActiveTestState = JSON.parse(activeSessionStr);
-        if (session && session.timeRemaining > 0 && !session.isSubmitted) {
-          setActiveTest(session);
+    // Initial session retrieval
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setSupabaseUser(session.user);
+        loadCloudProfile(session.user.id);
+      } else {
+        // Fallback to local storage offline states if no user is signed in
+        const name = localStorage.getItem("testify_username");
+        if (name) {
+          setUsername(name);
+          setIsFirstVisit(false);
+        }
+
+        try {
+          const historyStr = localStorage.getItem("testify_test_history");
+          if (historyStr) setTestHistory(JSON.parse(historyStr));
+
+          const bookmarksStr = localStorage.getItem("testify_bookmarks");
+          if (bookmarksStr) setBookmarks(JSON.parse(bookmarksStr));
+
+          const mistakesStr = localStorage.getItem("testify_mistake_notes");
+          if (mistakesStr) setMistakeNotes(JSON.parse(mistakesStr));
+        } catch (e) {}
+
+        const activeSessionStr = localStorage.getItem("testify_active_test_session");
+        if (activeSessionStr) {
+          try {
+            const session: ActiveTestState = JSON.parse(activeSessionStr);
+            if (session && session.timeRemaining > 0 && !session.isSubmitted) {
+              setActiveTest(session);
+              setShowResumeBanner(true);
+            }
+          } catch (e) {}
+        }
+        setIsSupabaseLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          loadCloudProfile(session.user.id);
+        } else {
+          setSupabaseUser(null);
+          setIsSupabaseLoading(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadCloudProfile = async (userId: string) => {
+    setIsSupabaseLoading(true);
+    try {
+      const profile = await fetchUserProfile(userId);
+      if (profile) {
+        setUsername(profile.username || "Student");
+        setTestHistory(profile.test_history || []);
+        setBookmarks(profile.bookmarks || []);
+        setMistakeNotes(profile.mistake_notes || {});
+        setActiveTest(profile.active_test_session || null);
+        if (profile.active_test_session && profile.active_test_session.timeRemaining > 0 && !profile.active_test_session.isSubmitted) {
           setShowResumeBanner(true);
         }
-      } catch (e) {}
+        setIsFirstVisit(false);
+      }
+    } catch (e) {
+      console.error("Error loading cloud profile", e);
+    } finally {
+      setIsSupabaseLoading(false);
     }
-  }, []);
+  };
+
+  const handleSupabaseAuthSuccess = (user: any, profile: any) => {
+    setSupabaseUser(user);
+    setUsername(profile.username);
+    setTestHistory(profile.test_history);
+    setBookmarks(profile.bookmarks);
+    setMistakeNotes(profile.mistake_notes);
+    setActiveTest(profile.active_test_session);
+    if (profile.active_test_session && profile.active_test_session.timeRemaining > 0 && !profile.active_test_session.isSubmitted) {
+      setShowResumeBanner(true);
+    }
+    setIsFirstVisit(false);
+  };
+
+  const handleSignOut = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setSupabaseUser(null);
+    setUsername("");
+    setTestHistory([]);
+    setBookmarks([]);
+    setMistakeNotes({});
+    setActiveTest(null);
+    setIsFirstVisit(true);
+    setCurrentView("dashboard");
+  };
 
   // Sync Dark mode toggles
   const toggleDarkMode = () => {
@@ -128,9 +267,9 @@ export default function App() {
 
   const handleNameSubmitted = (name: string) => {
     setUsername(name);
-    localStorage.setItem("testify_username", name);
     setIsFirstVisit(false);
     setCurrentView("dashboard");
+    syncState(name, testHistory, bookmarks, mistakeNotes, activeTest);
   };
 
   // Generate Test Engine
@@ -174,8 +313,8 @@ export default function App() {
 
     setActiveTest(testState);
     setShowResumeBanner(false);
-    localStorage.setItem("testify_active_test_session", JSON.stringify(testState));
     setCurrentView("active-test");
+    syncState(username, testHistory, bookmarks, mistakeNotes, testState);
   };
 
   // Evaluation & Grading Logic
@@ -201,6 +340,8 @@ export default function App() {
         subjectBreakdown[q.subject].maxScore += q.marks;
       }
     });
+
+    const currentMistakes = { ...mistakeNotes };
 
     questions.forEach(q => {
       const resp = responses[q.id];
@@ -241,10 +382,8 @@ export default function App() {
           }
 
           // Automatically append incorrect questions to Mistake notes with empty feedback
-          if (!mistakeNotes[q.id]) {
-            const updatedMistakes = { ...mistakeNotes, [q.id]: "" };
-            setMistakeNotes(updatedMistakes);
-            localStorage.setItem("testify_mistake_notes", JSON.stringify(updatedMistakes));
+          if (!currentMistakes[q.id]) {
+            currentMistakes[q.id] = "";
           }
         }
       }
@@ -291,13 +430,13 @@ export default function App() {
 
     const updatedHistory = [result, ...testHistory];
     setTestHistory(updatedHistory);
-    localStorage.setItem("testify_test_history", JSON.stringify(updatedHistory));
+    setMistakeNotes(currentMistakes);
 
     // Reset session states
     setActiveTest(null);
     setSelectedResult(result);
-    localStorage.removeItem("testify_active_test_session");
     setCurrentView("result");
+    syncState(username, updatedHistory, bookmarks, currentMistakes, null);
   };
 
   // Toggle/Manage Bookmarks
@@ -309,21 +448,21 @@ export default function App() {
       nextBookmarks.push(qId);
     }
     setBookmarks(nextBookmarks);
-    localStorage.setItem("testify_bookmarks", JSON.stringify(nextBookmarks));
+    syncState(username, testHistory, nextBookmarks, mistakeNotes, activeTest);
   };
 
   // Manage Mistakes Notes
   const handleAddMistakeNote = (qId: string, notes: string) => {
     const nextMistakes = { ...mistakeNotes, [qId]: notes };
     setMistakeNotes(nextMistakes);
-    localStorage.setItem("testify_mistake_notes", JSON.stringify(nextMistakes));
+    syncState(username, testHistory, bookmarks, nextMistakes, activeTest);
   };
 
   const handleDeleteMistake = (qId: string) => {
     const nextMistakes = { ...mistakeNotes };
     delete nextMistakes[qId];
     setMistakeNotes(nextMistakes);
-    localStorage.setItem("testify_mistake_notes", JSON.stringify(nextMistakes));
+    syncState(username, testHistory, bookmarks, nextMistakes, activeTest);
   };
 
   // Direct Retake launcher
@@ -362,20 +501,43 @@ export default function App() {
   };
 
   // Reset System Hard Reset
-  const handleResetApp = () => {
+  const handleResetApp = async () => {
+    if (supabaseUser) {
+      await saveUserProfile(supabaseUser.id, {
+        username: "Student",
+        test_history: [],
+        bookmarks: [],
+        mistake_notes: {},
+        active_test_session: null
+      });
+    }
     localStorage.clear();
     setUsername("");
     setIsFirstVisit(true);
     setTestHistory([]);
     setBookmarks([]);
-    setMistakeNotes([]);
+    setMistakeNotes({});
     setActiveTest(null);
     setCurrentView("dashboard");
     window.location.reload();
   };
 
+  if (isSupabaseLoading) {
+    return (
+      <div className="fixed inset-0 bg-[#FAFAFA] dark:bg-zinc-950 flex flex-col items-center justify-center gap-4 z-[200]">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 font-mono tracking-widest uppercase">Connecting to Cloud...</p>
+      </div>
+    );
+  }
+
   if (isFirstVisit) {
-    return <WelcomePage onNameSubmitted={handleNameSubmitted} />;
+    return (
+      <WelcomePage 
+        onNameSubmitted={handleNameSubmitted} 
+        onSupabaseAuthSuccess={handleSupabaseAuthSuccess}
+      />
+    );
   }
 
   // Navigation Panel Definitions
@@ -436,6 +598,15 @@ export default function App() {
                 ? stateOrUpdater(prev) 
                 : stateOrUpdater;
               localStorage.setItem("testify_active_test_session", JSON.stringify(nextState));
+              if (supabaseUser) {
+                saveUserProfile(supabaseUser.id, {
+                  username,
+                  test_history: testHistory,
+                  bookmarks,
+                  mistake_notes: mistakeNotes,
+                  active_test_session: nextState
+                });
+              }
               return nextState;
             });
           }}
@@ -611,7 +782,7 @@ export default function App() {
                     onDeleteResult={(id) => {
                       const next = testHistory.filter(h => h.id !== id);
                       setTestHistory(next);
-                      localStorage.setItem("testify_test_history", JSON.stringify(next));
+                      syncState(username, next, bookmarks, mistakeNotes, activeTest);
                     }}
                     onRetakeTest={handleRetakeResult}
                   />
@@ -622,11 +793,14 @@ export default function App() {
                     username={username}
                     onUpdateUsername={(name) => {
                       setUsername(name);
-                      localStorage.setItem("testify_username", name);
+                      syncState(name, testHistory, bookmarks, mistakeNotes, activeTest);
                     }}
                     onResetApp={handleResetApp}
                     darkMode={darkMode}
                     onToggleDarkMode={toggleDarkMode}
+                    isSupabaseUser={!!supabaseUser}
+                    supabaseEmail={supabaseUser?.email}
+                    onSignOut={handleSignOut}
                   />
                 )}
 
