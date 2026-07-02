@@ -2,15 +2,40 @@ import { createClient } from "@supabase/supabase-js";
 import { TestResult, ActiveTestState } from "../types";
 
 // Grab variables from Vite env safely
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
+const rawUrl = ((import.meta as any).env?.VITE_SUPABASE_URL || "").trim();
+const rawKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "").trim();
 
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseUrl.trim() && supabaseAnonKey && supabaseAnonKey.trim());
+// Clean up double quotes if the user entered them in AI Studio Secrets
+const supabaseUrl = rawUrl.replace(/^["']|["']$/g, "").trim();
+const supabaseAnonKey = rawKey.replace(/^["']|["']$/g, "").trim();
+
+const isValidHttpUrl = (str: string) => {
+  try {
+    const url = new URL(str);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+};
+
+export const isSupabaseConfigured = !!(
+  supabaseUrl &&
+  supabaseAnonKey &&
+  isValidHttpUrl(supabaseUrl)
+);
 
 // Initialize the Supabase client safely
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+const getSupabaseClient = () => {
+  if (!isSupabaseConfigured) return null;
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  } catch (e) {
+    console.error("Supabase client initialization failed:", e);
+    return null;
+  }
+};
+
+export const supabase = getSupabaseClient();
 
 export interface SupabaseUserProfile {
   username: string;
