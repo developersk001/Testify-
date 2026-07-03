@@ -1,77 +1,20 @@
-# Testify JEE
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-> Practice Smart. Score High.
+# Run and deploy your AI Studio app
 
-## Overview
+This contains everything you need to run your app locally.
 
-Testify JEE is a modern web platform for creating customizable **JEE
-Main** and **JEE Advanced** mock tests from a question bank
-architecture. It focuses on a clean UI, detailed analytics, offline
-support, and a premium user experience.
+View your app in AI Studio: https://ai.studio/apps/fcd2fd43-2793-43e6-ace2-46aa6c689928
 
-## Features
+## Run Locally
 
--   🎯 Custom mock test creation
--   ⏱️ Configurable timer with auto-submit
--   📊 Detailed performance analysis
--   📈 Subject, chapter, and difficulty insights
--   💾 Local browser storage (no account required)
--   📥 PDF/CSV report export
--   🌙 Dark & Light mode
--   📚 Mistake Book and Revision Mode
--   📱 Responsive design
--   ⚡ Fast, PWA-ready architecture
+**Prerequisites:**  Node.js
 
-## Tech Stack
 
--   Next.js
--   React
--   TypeScript
--   Tailwind CSS
--   Framer Motion
--   IndexedDB / LocalStorage
-
-## Project Structure
-
-``` text
-app/
-components/
-data/
-hooks/
-lib/
-public/
-styles/
-types/
-utils/
-```
-
-## Getting Started
-
-``` bash
-git clone https://github.com/your-username/testify-jee.git
-cd testify-jee
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000`.
-
-## Roadmap
-
--   Import question bank
--   AI-powered study recommendations
--   Cloud sync
--   Multi-language support
--   Admin dashboard
-
-## Contributing
-
-Pull requests and feature suggestions are welcome.
-
-## License
-
-MIT License
-
-------------------------------------------------------------------------
-
-Made with ❤️ for JEE aspirants.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

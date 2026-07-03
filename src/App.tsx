@@ -15,7 +15,8 @@ import {
   Sun,
   Menu,
   X,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -469,12 +470,43 @@ export default function App() {
         /* STANDARD NAVIGATION LAYOUT */
         <div className="flex-1 flex flex-col md:flex-row">
           
-          {/* Desktop Left Rail / Mobile Top Bar */}
-          <aside className="w-full md:w-64 bg-white dark:bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-150 dark:border-zinc-800 flex flex-col justify-between p-5 shrink-0 select-none">
+          {/* Mobile Top Bar with menu trigger on far left and logo centered */}
+          <div className="flex md:hidden items-center justify-center relative w-full h-14 bg-white dark:bg-zinc-900 border-b border-zinc-150 dark:border-zinc-800 px-4 shrink-0 select-none">
+            {/* Menu button on the left */}
+            <button 
+              onClick={() => setMobileMenuOpen(true)}
+              className="absolute left-4 p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Centered logo brand */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
+                <img 
+                  src={LOGO_URL} 
+                  alt="Testify Logo" 
+                  className="absolute inset-0 w-full h-full rounded-lg object-cover z-10"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-sm tracking-tighter">
+                  T
+                </div>
+              </div>
+              <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
+            </div>
+          </div>
+
+          {/* Desktop Left Rail (permanently visible on md+) */}
+          <aside className="hidden md:flex md:w-64 bg-white dark:bg-zinc-900 md:border-r border-zinc-150 dark:border-zinc-800 flex-col justify-between p-5 shrink-0 select-none">
             <div className="space-y-6">
               
-              {/* App logo brand */}
-              <div className="flex items-center justify-between">
+              {/* App logo brand for desktop */}
+              <div className="hidden md:flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
                   <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
                     <img 
@@ -491,30 +523,11 @@ export default function App() {
                     </div>
                   </div>
                   <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
-                  <span className="text-[9px] bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded-full font-mono">SaaS</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {/* Theme toggler */}
-                  <button 
-                    onClick={toggleDarkMode}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850"
-                  >
-                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  </button>
-
-                  {/* Mobile menu trigger */}
-                  <button 
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="md:hidden p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850"
-                  >
-                    {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-                  </button>
                 </div>
               </div>
 
-              {/* Navigation Tabs (Desktop view or Mobile opened menu) */}
-              <nav className={`space-y-1 ${mobileMenuOpen ? "block" : "hidden md:block"}`}>
+              {/* Navigation Tabs (Desktop view) */}
+              <nav className="space-y-1">
                 {NAV_ITEMS.map((item) => {
                   const Icon = item.icon;
                   const isActive = currentView === item.id;
@@ -523,7 +536,6 @@ export default function App() {
                       key={item.id}
                       onClick={() => {
                         setCurrentView(item.id);
-                        setMobileMenuOpen(false);
                       }}
                       className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-all ${
                         isActive
@@ -536,12 +548,32 @@ export default function App() {
                     </button>
                   );
                 })}
+
+                {/* Theme Toggle Button inside the menu ("three line ke andar") */}
+                <div className="pt-2 mt-2 border-t border-zinc-150 dark:border-zinc-800">
+                  <button
+                    onClick={toggleDarkMode}
+                    className="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-between text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {darkMode ? (
+                        <Sun className="w-4 h-4 text-amber-500 shrink-0" />
+                      ) : (
+                        <Moon className="w-4 h-4 text-blue-500 shrink-0" />
+                      )}
+                      <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
+                      {darkMode ? "Light" : "Dark"}
+                    </span>
+                  </button>
+                </div>
               </nav>
 
             </div>
 
-            {/* Profile rail info */}
-            <div className={`border-t border-zinc-100 dark:border-zinc-850 pt-4 flex items-center gap-3 ${mobileMenuOpen ? "block" : "hidden md:flex"}`}>
+            {/* Profile rail info (Desktop view) */}
+            <div className="border-t border-zinc-100 dark:border-zinc-850 pt-4 flex items-center gap-3">
               <div className="w-9 h-9 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold rounded-full flex items-center justify-center text-xs">
                 {username.slice(0, 2).toUpperCase()}
               </div>
@@ -553,8 +585,139 @@ export default function App() {
 
           </aside>
 
+          {/* Mobile Drawer (Left to Right slide-in with AnimatePresence) */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <>
+                {/* Backdrop overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.4 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="fixed inset-0 bg-black z-50 md:hidden"
+                />
+
+                {/* Left drawer panel */}
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ type: "tween", ease: "easeInOut", duration: 0.25 }}
+                  className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white dark:bg-zinc-900 z-50 md:hidden flex flex-col justify-between p-5 border-r border-zinc-150 dark:border-zinc-800 shadow-2xl"
+                >
+                  <div className="space-y-6">
+                    {/* Header inside drawer */}
+                    <div className="flex items-center justify-between pb-4 border-b border-zinc-150 dark:border-zinc-800">
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
+                          <img 
+                            src={LOGO_URL} 
+                            alt="Testify Logo" 
+                            className="absolute inset-0 w-full h-full rounded-lg object-cover z-10"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-sm tracking-tighter">
+                            T
+                          </div>
+                        </div>
+                        <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
+                      </div>
+                      <button 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors"
+                        aria-label="Close menu"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Navigation Items inside mobile drawer */}
+                    <nav className="space-y-1">
+                      {NAV_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = currentView === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              setCurrentView(item.id);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-all ${
+                              isActive
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/10 font-bold"
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 shrink-0" />
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+
+                      {/* Theme Toggle Button inside the mobile drawer */}
+                      <div className="pt-2 mt-2 border-t border-zinc-150 dark:border-zinc-800">
+                        <button
+                          onClick={toggleDarkMode}
+                          className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            {darkMode ? (
+                              <Sun className="w-4 h-4 text-amber-500 shrink-0" />
+                            ) : (
+                              <Moon className="w-4 h-4 text-blue-500 shrink-0" />
+                            )}
+                            <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+                          </div>
+                          <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
+                            {darkMode ? "Light" : "Dark"}
+                          </span>
+                        </button>
+                      </div>
+                    </nav>
+                  </div>
+
+                  {/* Profile info inside mobile drawer */}
+                  <div className="border-t border-zinc-100 dark:border-zinc-850 pt-4 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold rounded-full flex items-center justify-center text-xs">
+                      {username.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 space-y-0.5 truncate select-none">
+                      <h5 className="font-bold text-xs truncate text-zinc-800 dark:text-zinc-100">{username}</h5>
+                      <span className="text-[10px] text-zinc-400 font-mono">JEE Main Aspirant</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
           {/* Core Content frame */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 select-text">
+            
+            {/* Top Back Navigation for Non-Dashboard views */}
+            {currentView !== "dashboard" && currentView !== "active-test" && (
+              <div className="mb-4 flex items-center">
+                <button
+                  onClick={() => {
+                    if (currentView === "result") {
+                      setCurrentView("history");
+                    } else {
+                      setCurrentView("dashboard");
+                    }
+                  }}
+                  className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 dark:hover:border-blue-500/50 transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4.5 h-4.5 transition-transform group-hover:-translate-x-0.5" />
+                  <span>Back</span>
+                </button>
+              </div>
+            )}
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentView}
@@ -683,6 +846,15 @@ export default function App() {
                 )}
               </motion.div>
             </AnimatePresence>
+
+            {/* Premium and beautiful footer */}
+            <footer className="mt-16 pt-8 pb-4 border-t border-zinc-150/60 dark:border-zinc-800/50 text-center select-none">
+              <p className="text-xs font-semibold tracking-wide text-zinc-400 dark:text-zinc-500 flex items-center justify-center gap-1.5">
+                <span>Made with</span>
+                <span className="text-rose-500 animate-pulse text-sm inline-block">❤️</span>
+                <span>for JEE Aspirants</span>
+              </p>
+            </footer>
           </main>
 
         </div>
