@@ -42,6 +42,21 @@ export default function Dashboard({
   onSelectHistoryTest
 }: DashboardProps) {
 
+  const [examTarget, setExamTarget] = React.useState<"main" | "advanced">(() => {
+    return (localStorage.getItem("testify_exam_target") as "main" | "advanced") || "main";
+  });
+
+  const handleSetExamTarget = (target: "main" | "advanced") => {
+    setExamTarget(target);
+    localStorage.setItem("testify_exam_target", target);
+  };
+
+  const daysRemaining = useMemo(() => {
+    const targetDate = examTarget === "main" ? new Date("2027-01-24") : new Date("2027-05-23");
+    const diffTime = targetDate.getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }, [examTarget]);
+
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -130,18 +145,50 @@ export default function Dashboard({
           </div>
         </div>
 
-        {/* Motivational quote & streak banner */}
+        {/* Countdown & Motivation card */}
         <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/85 rounded-2xl p-6 flex flex-col justify-between shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">Daily Streak</span>
-            <div className="flex items-center gap-1 text-orange-500 font-bold text-sm bg-orange-500/10 px-2.5 py-1 rounded-full">
-              <Flame className="w-4 h-4 fill-current" />
-              <span>{userProfile.streak} Days Active</span>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">Countdown to Success</span>
+              {/* Exam Target Selector */}
+              <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+                <button
+                  onClick={() => handleSetExamTarget("main")}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                    examTarget === "main"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                >
+                  JEE Main
+                </button>
+                <button
+                  onClick={() => handleSetExamTarget("advanced")}
+                  className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                    examTarget === "advanced"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  }`}
+                >
+                  Advanced
+                </button>
+              </div>
+            </div>
+
+            {/* Countdown display */}
+            <div className="flex items-baseline gap-2 mb-4 bg-blue-500/5 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-100/50 dark:border-blue-950/40">
+              <span className="text-4xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400">
+                {daysRemaining}
+              </span>
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                days left for {examTarget === "main" ? "JEE Main (Jan 24, 2027)" : "JEE Advanced (May 23, 2027)"}
+              </span>
             </div>
           </div>
           
-          <div className="my-6">
-            <p className="text-sm font-medium italic text-zinc-600 dark:text-zinc-300">
+          <div className="my-4 border-t border-zinc-100 dark:border-zinc-800/50 pt-4">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 block mb-2">Daily Motivation</span>
+            <p className="text-sm font-medium italic text-zinc-600 dark:text-zinc-300 leading-relaxed">
               "{quote.text}"
             </p>
             <span className="text-xs text-zinc-400 block mt-2 font-mono">
@@ -149,7 +196,7 @@ export default function Dashboard({
             </span>
           </div>
 
-          <div className="border-t border-zinc-50 dark:border-zinc-800/80 pt-4 flex justify-between items-center text-xs text-zinc-500">
+          <div className="border-t border-zinc-150/60 dark:border-zinc-800/80 pt-4 flex justify-between items-center text-xs text-zinc-500">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
               <span>Member since:</span>

@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   AlertCircle,
-  ChevronLeft
+  ChevronLeft,
+  Flame
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -415,6 +416,7 @@ export default function App() {
   ];
 
   const activeNavItem = NAV_ITEMS.find(n => n.id === currentView);
+  const streakVal = testHistory.length > 0 ? Math.min(7, testHistory.length + 1) : 1;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
@@ -498,6 +500,12 @@ export default function App() {
                 </div>
               </div>
               <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
+            </div>
+
+            {/* Right side daily streak badge for mobile */}
+            <div className="absolute right-4 flex items-center gap-1 text-orange-500 font-bold text-xs bg-orange-500/10 dark:bg-orange-500/20 px-2.5 py-1 rounded-full border border-orange-500/10">
+              <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
+              <span>{streakVal}</span>
             </div>
           </div>
 
@@ -699,24 +707,37 @@ export default function App() {
           {/* Core Content frame */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 select-text">
             
-            {/* Top Back Navigation for Non-Dashboard views */}
-            {currentView !== "dashboard" && currentView !== "active-test" && (
-              <div className="mb-4 flex items-center">
-                <button
-                  onClick={() => {
-                    if (currentView === "result") {
-                      setCurrentView("history");
-                    } else {
-                      setCurrentView("dashboard");
-                    }
-                  }}
-                  className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 dark:hover:border-blue-500/50 transition-all active:scale-95 cursor-pointer"
-                >
-                  <ChevronLeft className="w-4.5 h-4.5 transition-transform group-hover:-translate-x-0.5" />
-                  <span>Back</span>
-                </button>
+            {/* Top Navigation Row */}
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              {/* Back Navigation or Spacer */}
+              <div>
+                {currentView !== "dashboard" && currentView !== "active-test" ? (
+                  <button
+                    onClick={() => {
+                      if (currentView === "result") {
+                        setCurrentView("history");
+                      } else {
+                        setCurrentView("dashboard");
+                      }
+                    }}
+                    className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 dark:hover:border-blue-500/50 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+                    <span>Back</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
               </div>
-            )}
+
+              {/* Desktop Streak Badge (Mobile is handled in top bar) */}
+              <div className="hidden md:flex items-center">
+                <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-extrabold text-xs bg-orange-500/10 dark:bg-orange-500/20 px-3.5 py-1.5 rounded-xl border border-orange-500/20 shadow-sm">
+                  <Flame className="w-4 h-4 fill-current animate-pulse" />
+                  <span>{streakVal} Day Streak</span>
+                </div>
+              </div>
+            </div>
 
             <AnimatePresence mode="wait">
               <motion.div
@@ -848,7 +869,7 @@ export default function App() {
             </AnimatePresence>
 
             {/* Premium and beautiful footer */}
-            <footer className="mt-16 pt-8 pb-4 border-t border-zinc-150/60 dark:border-zinc-800/50 text-center select-none">
+            <footer className="mt-6 pt-3 pb-1 border-t border-zinc-150/60 dark:border-zinc-800/50 text-center select-none">
               <p className="text-xs font-semibold tracking-wide text-zinc-400 dark:text-zinc-500 flex items-center justify-center gap-1.5">
                 <span>Made with</span>
                 <span className="text-rose-500 animate-pulse text-sm inline-block">❤️</span>
