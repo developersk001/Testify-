@@ -561,15 +561,39 @@ export default function TestCreator({ questionBank, onGenerateTest }: TestCreato
                     <h3 className="text-lg font-bold">Select Syllabus Modules</h3>
                     <p className="text-xs text-zinc-500">Choose specific chapters to focus on, or leave empty for Full Syllabus.</p>
                   </div>
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                    <input 
-                      type="text"
-                      placeholder="Search chapters..."
-                      value={chapterSearch}
-                      onChange={(e) => setChapterSearch(e.target.value)}
-                      className="border border-zinc-200 dark:border-zinc-850 bg-white dark:bg-zinc-950 pl-8 pr-3 py-1.5 rounded-xl text-xs max-w-xs focus:border-blue-500 outline-none"
-                    />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const allChs: string[] = [];
+                          subjects.forEach(sub => {
+                            if (allChaptersBySubject[sub]) {
+                              allChs.push(...allChaptersBySubject[sub]);
+                            }
+                          });
+                          setSelectedChapters(allChs);
+                        }}
+                        className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-lg"
+                      >
+                        Select All Chapters
+                      </button>
+                      <button
+                        onClick={() => setSelectedChapters([])}
+                        className="text-xs font-bold text-zinc-500 dark:text-zinc-400 hover:underline cursor-pointer bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-lg"
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                      <input 
+                        type="text"
+                        placeholder="Search chapters..."
+                        value={chapterSearch}
+                        onChange={(e) => setChapterSearch(e.target.value)}
+                        className="border border-zinc-200 dark:border-zinc-850 bg-white dark:bg-zinc-950 pl-8 pr-3 py-1.5 rounded-xl text-xs max-w-xs focus:border-blue-500 outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
 

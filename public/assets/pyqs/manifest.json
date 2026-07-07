@@ -1,0 +1,154 @@
+{
+  "files": [
+    {
+      "id": "file-001",
+      "exam": "JEE Main",
+      "year": 2024,
+      "subject": "Physics",
+      "chapter": "Rotational Dynamics",
+      "topic": "Moment of Inertia",
+      "path": "/assets/pyqs/jee_main_2024_physics_rotational.json",
+      "count": 4
+    },
+    {
+      "id": "file-002",
+      "exam": "JEE Main",
+      "year": 2024,
+      "subject": "Chemistry",
+      "chapter": "Chemical Bonding",
+      "topic": "Molecular Orbital Theory",
+      "path": "/assets/pyqs/jee_main_2024_chemistry_bonding.json",
+      "count": 4
+    },
+    {
+      "id": "file-003",
+      "exam": "JEE Main",
+      "year": 2024,
+      "subject": "Mathematics",
+      "chapter": "Matrices & Determinants",
+      "topic": "System of Linear Equations",
+      "path": "/assets/pyqs/jee_main_2024_maths_matrices.json",
+      "count": 4
+    },
+    {
+      "id": "file-004",
+      "exam": "JEE Advanced",
+      "year": 2025,
+      "subject": "Physics",
+      "chapter": "Electrostatics",
+      "topic": "Electric Potential",
+      "path": "/assets/pyqs/jee_advanced_2025_physics_electrostatics.json",
+      "count": 4
+    },
+    {
+      "id": "file-005",
+      "exam": "JEE Advanced",
+      "year": 2025,
+      "subject": "Chemistry",
+      "chapter": "Coordination Compounds",
+      "topic": "Isomerism",
+      "path": "/assets/pyqs/jee_advanced_2025_chemistry_coordination.json",
+      "count": 4
+    },
+    {
+      "id": "file-006",
+      "exam": "JEE Advanced",
+      "year": 2025,
+      "subject": "Mathematics",
+      "chapter": "Limits Continuity & Differentiability",
+      "topic": "L'Hopital's Rule",
+      "path": "/assets/pyqs/jee_advanced_2025_maths_limits.json",
+      "count": 4
+    },
+    {
+      "id": "file-007",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Physics",
+      "chapter": "Modern Physics",
+      "topic": "Photoelectric Effect",
+      "path": "/assets/pyqs/jee_main_2026_physics_modern.json",
+      "count": 4
+    },
+    {
+      "id": "file-008",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Chemistry",
+      "chapter": "Organic Chemistry",
+      "topic": "Hydrocarbons",
+      "path": "/assets/pyqs/jee_main_2026_chemistry_organic.json",
+      "count": 4
+    },
+    {
+      "id": "file-009",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Mathematics",
+      "chapter": "Coordinate Geometry",
+      "topic": "Circles",
+      "path": "/assets/pyqs/jee_main_2026_maths_circles.json",
+      "count": 4
+    },
+    {
+      "id": "file-010",
+      "exam": "JEE Main",
+      "year": 2023,
+      "subject": "Physics",
+      "chapter": "Mixed Chapters (2015-2023)",
+      "topic": "Core Physics Concepts",
+      "path": "/assets/pyqs/jee_2015_2023_physics.json",
+      "count": 9
+    },
+    {
+      "id": "file-011",
+      "exam": "JEE Main",
+      "year": 2023,
+      "subject": "Chemistry",
+      "chapter": "Mixed Chapters (2015-2023)",
+      "topic": "Core Chemistry Concepts",
+      "path": "/assets/pyqs/jee_2015_2023_chemistry.json",
+      "count": 9
+    },
+    {
+      "id": "file-012",
+      "exam": "JEE Main",
+      "year": 2023,
+      "subject": "Mathematics",
+      "chapter": "Mixed Chapters (2015-2023)",
+      "topic": "Core Mathematics Concepts",
+      "path": "/assets/pyqs/jee_2015_2023_maths.json",
+      "count": 9
+    },
+    {
+      "id": "file-013",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Physics",
+      "chapter": "Mixed Chapters (2000-2026)",
+      "topic": "Full Physics Syllabus PYQs",
+      "path": "/assets/pyqs/jee_2000_2026_physics.json",
+      "count": 28
+    },
+    {
+      "id": "file-014",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Chemistry",
+      "chapter": "Mixed Chapters (2000-2026)",
+      "topic": "Full Chemistry Syllabus PYQs",
+      "path": "/assets/pyqs/jee_2000_2026_chemistry.json",
+      "count": 31
+    },
+    {
+      "id": "file-015",
+      "exam": "JEE Main",
+      "year": 2026,
+      "subject": "Mathematics",
+      "chapter": "Mixed Chapters (2000-2026)",
+      "topic": "Full Mathematics Syllabus PYQs",
+      "path": "/assets/pyqs/jee_2000_2026_maths.json",
+      "count": 22
+    }
+  ]
+}

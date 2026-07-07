@@ -17,7 +17,11 @@ import {
   X,
   AlertCircle,
   ChevronLeft,
-  Flame
+  Flame,
+  Bookmark,
+  Bell,
+  ChevronRight,
+  Trophy
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -42,6 +46,7 @@ import MistakeBookPage from "./components/MistakeBookPage";
 import RevisionPage from "./components/RevisionPage";
 import GlobalSearchPage from "./components/GlobalSearchPage";
 import WelcomePage from "./components/WelcomePage";
+import PyqMockTestPage from "./components/PyqMockTestPage";
 
 export default function App() {
   // Authentication / Profile
@@ -407,6 +412,7 @@ export default function App() {
   // Navigation Panel Definitions
   const NAV_ITEMS = [
     { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "jee-pyqs", label: "JEE PYQ Mock Tests", icon: Trophy },
     { id: "create-test", label: "Generate Test", icon: Sliders },
     { id: "revision", label: "Revision Terminal", icon: BookOpenCheck },
     { id: "mistake-book", label: "Mistake Book", icon: ShieldAlert },
@@ -473,39 +479,58 @@ export default function App() {
         <div className="flex-1 flex flex-col md:flex-row">
           
           {/* Mobile Top Bar with menu trigger on far left and logo centered */}
-          <div className="flex md:hidden items-center justify-center relative w-full h-14 bg-white dark:bg-zinc-900 border-b border-zinc-150 dark:border-zinc-800 px-4 shrink-0 select-none">
-            {/* Menu button on the left */}
+          <div className="flex md:hidden items-center justify-between w-full h-15 bg-white dark:bg-zinc-900 border-b border-zinc-150 dark:border-zinc-800 px-4 shrink-0 select-none">
+            {/* Left side: Menu button */}
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="absolute left-4 p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors"
+              className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
               aria-label="Open menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5.5 h-5.5" />
             </button>
 
-            {/* Centered logo brand */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
-                <img 
-                  src={LOGO_URL} 
-                  alt="Testify Logo" 
-                  className="absolute inset-0 w-full h-full rounded-lg object-cover z-10"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-sm tracking-tighter">
-                  T
-                </div>
+            {/* Centered TESTIFY Brand Logo */}
+            <div className="flex items-center gap-1.5">
+              <div className="relative w-7.5 h-7.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+                </svg>
               </div>
-              <span className="font-extrabold text-base tracking-tight text-zinc-950 dark:text-white">Testify</span>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-black tracking-tight leading-none text-zinc-900 dark:text-white">
+                  TESTIFY
+                </span>
+                <span className="text-[7px] font-extrabold tracking-widest text-zinc-400 mt-0.5 uppercase leading-none">
+                  PRACTICE SMART. SCORE HIGH.
+                </span>
+              </div>
             </div>
 
-            {/* Right side daily streak badge for mobile */}
-            <div className="absolute right-4 flex items-center gap-1 text-orange-500 font-bold text-xs bg-orange-500/10 dark:bg-orange-500/20 px-2.5 py-1 rounded-full border border-orange-500/10">
-              <Flame className="w-3.5 h-3.5 fill-current animate-pulse" />
-              <span>{streakVal}</span>
+            {/* Right side: Bell & Profile avatar */}
+            <div className="flex items-center gap-2">
+              {/* Notification bell with badge */}
+              <button 
+                onClick={() => setCurrentView("dashboard")}
+                className="relative p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center">
+                  3
+                </span>
+              </button>
+
+              {/* Character Avatar */}
+              <button
+                onClick={() => setCurrentView("settings")}
+                className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-900/30 overflow-hidden flex items-center justify-center relative shadow-inner cursor-pointer"
+              >
+                <svg className="w-7 h-7 text-blue-600 dark:text-blue-400 absolute bottom-0" viewBox="0 0 64 64" fill="currentColor">
+                  <circle cx="32" cy="24" r="14" fill="#FDBA74" />
+                  <path d="M18 64c0-8.5 7.5-14 14-14s14 5.5 14 14H18z" fill="#3B82F6" />
+                  <path d="M32 6c-8 0-14 5-14 12 0 4 3 6 3 6s2-5 5-5c4 0 3 3 6 3s2-3 6-3c3 0 5 5 5 5s3-2 3-6c0-7-6-12-14-12z" fill="#1E293B" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -575,6 +600,21 @@ export default function App() {
                       {darkMode ? "Light" : "Dark"}
                     </span>
                   </button>
+                </div>
+
+                {/* WhatsApp Channel Link */}
+                <div className="pt-2 border-t border-zinc-150 dark:border-zinc-800">
+                  <a
+                    href="https://whatsapp.com/channel/0029Vb8N3QG89inbVgSzN80I"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all cursor-pointer"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-current text-emerald-500" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.863-9.83.001-2.624-1.02-5.09-2.875-6.948-1.855-1.858-4.325-2.88-6.953-2.88-5.438 0-9.862 4.414-9.865 9.831-.001 2.016.524 3.987 1.522 5.717l-.991 3.616 3.7-.972zm11.367-7.46c-.08-.13-.292-.21-.61-.37-.317-.16-1.873-.925-2.163-1.03-.292-.105-.502-.16-.713.16-.21.32-.813.103-.996 1.246-.183.21-.365.24-.682.08-.318-.16-1.34-.493-2.554-1.578-.94-.84-1.575-1.88-1.759-2.19-.183-.32-.02-.49.14-.65.143-.14.317-.37.476-.56.16-.19.21-.32.318-.53.106-.21.053-.4-.027-.56-.08-.16-.713-1.714-.977-2.353-.257-.624-.52-.54-.713-.55-.183-.01-.397-.01-.61-.01-.21 0-.555.08-.846.4-.29.32-1.11 1.08-1.11 2.64 0 1.56 1.14 3.07 1.3 3.28.16.21 2.245 3.428 5.44 4.81.76.33 1.352.527 1.815.673.764.243 1.46.21 2.012.127.614-.09 1.873-.765 2.138-1.467.264-.7.264-1.3.185-1.427z"/>
+                    </svg>
+                    <span>WhatsApp Channel</span>
+                  </a>
                 </div>
               </nav>
 
@@ -686,6 +726,21 @@ export default function App() {
                           </span>
                         </button>
                       </div>
+
+                      {/* WhatsApp Channel Link */}
+                      <div className="pt-2 border-t border-zinc-150 dark:border-zinc-800">
+                        <a
+                          href="https://whatsapp.com/channel/0029Vb8N3QG89inbVgSzN80I"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all cursor-pointer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-current text-emerald-500" viewBox="0 0 24 24">
+                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.863-9.83.001-2.624-1.02-5.09-2.875-6.948-1.855-1.858-4.325-2.88-6.953-2.88-5.438 0-9.862 4.414-9.865 9.831-.001 2.016.524 3.987 1.522 5.717l-.991 3.616 3.7-.972zm11.367-7.46c-.08-.13-.292-.21-.61-.37-.317-.16-1.873-.925-2.163-1.03-.292-.105-.502-.16-.713.16-.21.32-.813.103-.996 1.246-.183.21-.365.24-.682.08-.318-.16-1.34-.493-2.554-1.578-.94-.84-1.575-1.88-1.759-2.19-.183-.32-.02-.49.14-.65.143-.14.317-.37.476-.56.16-.19.21-.32.318-.53.106-.21.053-.4-.027-.56-.08-.16-.713-1.714-.977-2.353-.257-.624-.52-.54-.713-.55-.183-.01-.397-.01-.61-.01-.21 0-.555.08-.846.4-.29.32-1.11 1.08-1.11 2.64 0 1.56 1.14 3.07 1.3 3.28.16.21 2.245 3.428 5.44 4.81.76.33 1.352.527 1.815.673.764.243 1.46.21 2.012.127.614-.09 1.873-.765 2.138-1.467.264-.7.264-1.3.185-1.427z"/>
+                          </svg>
+                          <span>WhatsApp Channel</span>
+                        </a>
+                      </div>
                     </nav>
                   </div>
 
@@ -705,10 +760,10 @@ export default function App() {
           </AnimatePresence>
 
           {/* Core Content frame */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 select-text">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 select-text pb-24 md:pb-8">
             
             {/* Top Navigation Row */}
-            <div className="flex items-center justify-between mb-4 md:mb-6">
+            <div className="flex items-center justify-between mb-4 md:mb-6 border-b border-zinc-150/50 dark:border-zinc-800/80 pb-3">
               {/* Back Navigation or Spacer */}
               <div>
                 {currentView !== "dashboard" && currentView !== "active-test" ? (
@@ -726,16 +781,55 @@ export default function App() {
                     <span>Back</span>
                   </button>
                 ) : (
-                  <div />
+                  /* Desktop Dashboard Logo Header */
+                  <div className="hidden md:flex items-center gap-2">
+                    <div className="relative w-8.5 h-8.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-xs">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/>
+                      </svg>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-base font-black tracking-tight leading-none text-zinc-900 dark:text-white">
+                        TESTIFY
+                      </span>
+                      <span className="text-[7.5px] font-extrabold tracking-widest text-zinc-400 mt-0.5 uppercase leading-none">
+                        PRACTICE SMART. SCORE HIGH.
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {/* Desktop Streak Badge (Mobile is handled in top bar) */}
-              <div className="hidden md:flex items-center">
-                <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-extrabold text-xs bg-orange-500/10 dark:bg-orange-500/20 px-3.5 py-1.5 rounded-xl border border-orange-500/20 shadow-sm">
+              {/* Desktop Streak & Action Badges */}
+              <div className="hidden md:flex items-center gap-3.5">
+                <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-extrabold text-xs bg-orange-500/10 dark:bg-orange-500/20 px-3.5 py-1.5 rounded-xl border border-orange-500/10 shadow-xs">
                   <Flame className="w-4 h-4 fill-current animate-pulse" />
                   <span>{streakVal} Day Streak</span>
                 </div>
+
+                {/* Bell notification with badge */}
+                <button 
+                  onClick={() => setCurrentView("dashboard")}
+                  className="relative p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
+                >
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center border border-white dark:border-zinc-900 animate-pulse">
+                    3
+                  </span>
+                </button>
+
+                {/* Profile Character Avatar */}
+                <button 
+                  onClick={() => setCurrentView("settings")}
+                  className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/30 overflow-hidden flex items-center justify-center relative shadow-inner cursor-pointer"
+                >
+                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 absolute bottom-0" viewBox="0 0 64 64" fill="currentColor">
+                    <circle cx="32" cy="24" r="14" fill="#FDBA74" />
+                    <path d="M18 64c0-8.5 7.5-14 14-14s14 5.5 14 14H18z" fill="#3B82F6" />
+                    <path d="M32 6c-8 0-14 5-14 12 0 4 3 6 3 6s2-5 5-5c4 0 3 3 6 3s2-3 6-3c3 0 5 5 5 5s3-2 3-6c0-7-6-12-14-12z" fill="#1E293B" />
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -787,6 +881,14 @@ export default function App() {
                       setSelectedResult(test);
                       setCurrentView("result");
                     }}
+                  />
+                )}
+
+                {currentView === "jee-pyqs" && (
+                  <PyqMockTestPage 
+                    onGenerateTest={handleGenerateTest}
+                    mistakeNotes={mistakeNotes}
+                    questionBank={questionBank}
                   />
                 )}
 
@@ -877,6 +979,55 @@ export default function App() {
               </p>
             </footer>
           </main>
+
+          {/* Mobile Bottom Navigation Bar matching the image */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-45 bg-white dark:bg-zinc-900 border-t border-zinc-150 dark:border-zinc-800 px-3 py-2 flex items-center justify-around shadow-lg">
+            <button
+              onClick={() => setCurrentView("dashboard")}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+                currentView === "dashboard" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Home className="w-5 h-5" />
+              <span className="text-[10px]">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setCurrentView("create-test")}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+                currentView === "create-test" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Sliders className="w-5 h-5" />
+              <span className="text-[10px]">Practice</span>
+            </button>
+            <button
+              onClick={() => setCurrentView("jee-pyqs")}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+                currentView === "jee-pyqs" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Trophy className="w-5 h-5" />
+              <span className="text-[10px]">Mock Tests</span>
+            </button>
+            <button
+              onClick={() => setCurrentView("revision")}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+                currentView === "revision" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Layout className="w-5 h-5" />
+              <span className="text-[10px]">Analytics</span>
+            </button>
+            <button
+              onClick={() => setCurrentView("mistake-book")}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+                currentView === "mistake-book" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              <Bookmark className="w-5 h-5" />
+              <span className="text-[10px]">Bookmarks</span>
+            </button>
+          </div>
 
         </div>
       )}

@@ -38,6 +38,22 @@ export default function TestPage({
   const [numericalInput, setNumericalInput] = useState("");
   const [showPalette, setShowPalette] = useState(true);
 
+  const [visitedIndices, setVisitedIndices] = useState<number[]>(() => {
+    const initialVisited = [0];
+    questions.forEach((q, idx) => {
+      if (responses[q.id] && !initialVisited.includes(idx)) {
+        initialVisited.push(idx);
+      }
+    });
+    return initialVisited;
+  });
+
+  useEffect(() => {
+    if (!visitedIndices.includes(currentQuestionIndex)) {
+      setVisitedIndices(prev => [...prev, currentQuestionIndex]);
+    }
+  }, [currentQuestionIndex, questions, responses]);
+
   useEffect(() => {
     setShowPalette(window.innerWidth >= 1024);
   }, []);
@@ -312,21 +328,37 @@ export default function TestPage({
     }
   };
 
-  // Compute status for the Palette view
-  const getQuestionStatus = (q: Question, idx: number) => {
+  // Compute style & status classes for the Palette and Slider Box views
+  const getQuestionStyle = (idx: number, isPalette: boolean = false) => {
+    const q = questions[idx];
     const resp = responses[q.id];
     const isCurrent = idx === currentQuestionIndex;
 
-    if (isCurrent) return "current";
-    if (resp?.isMarkedForReview) return "marked";
-    
     const isAnswered = q.questionType === "Numerical" 
       ? !!resp?.textAnswer?.trim() 
       : (Array.isArray(resp?.selectedAnswer) ? resp.selectedAnswer.length > 0 : !!resp?.selectedAnswer);
 
-    if (isAnswered) return "answered";
-    if (resp) return "visited"; // opened but not answered
-    return "not-visited";
+    const isMarked = resp?.isMarkedForReview;
+    const isVisited = visitedIndices.includes(idx);
+
+    let baseClass = "transition-all border flex items-center justify-center font-bold font-mono shadow-sm cursor-pointer ";
+    baseClass += isPalette ? "w-11 h-11 rounded-xl text-xs " : "w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm rounded-lg sm:rounded-xl ";
+
+    if (isCurrent) {
+      baseClass += "ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-zinc-900 border-blue-600 scale-105 z-10 shadow-md ";
+    }
+
+    if (isMarked) {
+      baseClass += "bg-amber-500 border-amber-600 text-zinc-950 hover:bg-amber-400";
+    } else if (isAnswered) {
+      baseClass += "bg-emerald-600 border-emerald-700 text-white hover:bg-emerald-700";
+    } else if (isVisited) {
+      baseClass += "bg-rose-600 border-rose-700 text-white hover:bg-rose-700";
+    } else {
+      baseClass += "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/80";
+    }
+
+    return baseClass;
   };
 
   // Timer formatting
@@ -342,49 +374,57 @@ export default function TestPage({
     <div className={`fixed inset-0 bg-zinc-50 dark:bg-zinc-950 z-50 flex flex-col font-sans ${isFullscreen ? "p-0" : ""}`}>
       
       {/* Top Test Banner */}
-      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-150 dark:border-zinc-800 px-6 py-4 flex items-center justify-between shadow-sm select-none">
-        <div className="flex items-center gap-4">
+      <header className="bg-white dark:bg-zinc-900 border-b border-zinc-150 dark:border-zinc-800 px-3 sm:px-6 py-2.5 sm:py-4 flex flex-col sm:flex-row gap-3 sm:items-center justify-between shadow-sm select-none shrink-0">
+        <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
           <div className="space-y-0.5">
-            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{config.exam} Active Exam</span>
-            <h2 className="text-base font-extrabold text-zinc-950 dark:text-white">Testify Online Mock Terminal</h2>
+            <span className="text-[9px] sm:text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{config.exam} Active Exam</span>
+            <h2 className="text-xs sm:text-base font-extrabold text-zinc-950 dark:text-white">Testify Mock Terminal</h2>
+          </div>
+          
+          {/* Mobile timer */}
+          <div className="sm:hidden bg-red-500/10 border border-red-200/50 dark:border-red-950/30 text-red-600 px-2 py-1.5 rounded-xl flex items-center gap-1 font-mono font-bold text-xs">
+            <Clock className="w-3.5 h-3.5 animate-pulse" />
+            <span>{formatTime(timeRemaining)}</span>
           </div>
         </div>
 
         {/* Action controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 justify-end w-full sm:w-auto">
           <button 
             onClick={() => setShowPalette(!showPalette)}
-            className={`px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-2 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               showPalette 
                 ? "bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-950/20" 
                 : "bg-white dark:bg-zinc-900 hover:bg-zinc-50"
             }`}
           >
             <Layout className="w-4 h-4" />
-            <span className="hidden sm:inline">{showPalette ? "Hide Palette" : "Show Palette"}</span>
+            <span className="hidden md:inline">{showPalette ? "Hide Palette" : "Show Palette"}</span>
+            <span className="md:hidden">Palette</span>
           </button>
 
           <button 
             onClick={() => setShowCalculator(!showCalculator)}
-            className={`px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`px-2 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               showCalculator 
                 ? "bg-blue-50 border-blue-500 text-blue-600 dark:bg-blue-950/20" 
                 : "bg-white dark:bg-zinc-900 hover:bg-zinc-50"
             }`}
           >
             <Calculator className="w-4 h-4" />
-            <span>Virtual Calculator</span>
+            <span className="hidden md:inline">Virtual Calculator</span>
+            <span className="md:hidden">Calc</span>
           </button>
 
           <button 
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300"
+            className="p-1.5 sm:p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 cursor-pointer"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
 
           {/* TIMER BOX */}
-          <div className="bg-red-500/10 border border-red-200/50 dark:border-red-950/30 text-red-600 px-4 py-2 rounded-xl flex items-center gap-2 font-mono font-bold text-sm">
+          <div className="hidden sm:flex bg-red-500/10 border border-red-200/50 dark:border-red-950/30 text-red-600 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl items-center gap-2 font-mono font-bold text-sm">
             <Clock className="w-4 h-4 animate-pulse" />
             <span>{formatTime(timeRemaining)}</span>
           </div>
@@ -414,26 +454,17 @@ export default function TestPage({
               {/* Grid of Palette */}
               <div className="grid grid-cols-5 gap-2.5">
                 {questions.map((q, idx) => {
-                  const status = getQuestionStatus(q, idx);
+                  const styleClass = getQuestionStyle(idx, true);
+                  const isMarked = responses[q.id]?.isMarkedForReview;
                   return (
                     <button
                       key={q.id}
                       onClick={() => handlePaletteSelect(idx)}
-                      className={`w-11 h-11 rounded-xl text-xs font-bold font-mono transition-all border flex items-center justify-center relative ${
-                        status === "current" && "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/10 scale-105"
-                      } ${
-                        status === "answered" && "bg-emerald-500 border-emerald-500 text-white"
-                      } ${
-                        status === "marked" && "bg-purple-600 border-purple-600 text-white"
-                      } ${
-                        status === "visited" && "bg-zinc-100 border-zinc-250 text-zinc-600 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-                      } ${
-                        status === "not-visited" && "bg-transparent border-zinc-200 dark:border-zinc-800 text-zinc-400"
-                      }`}
+                      className={styleClass}
                     >
                       <span>{idx + 1}</span>
-                      {status === "marked" && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1 right-1" />
+                      {isMarked && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-950 absolute bottom-1 right-1" />
                       )}
                     </button>
                   );
@@ -445,16 +476,20 @@ export default function TestPage({
             <div className="border-t border-zinc-50 dark:border-zinc-800 pt-4 space-y-2 text-[10px] font-semibold text-zinc-500">
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3.5 h-3.5 rounded bg-emerald-500" />
+                  <div className="w-3.5 h-3.5 rounded bg-emerald-600" />
                   <span>Answered</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3.5 h-3.5 rounded bg-purple-600" />
+                  <div className="w-3.5 h-3.5 rounded bg-amber-500" />
                   <span>Marked</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 rounded bg-rose-600" />
+                  <span>Unanswered</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <div className="w-3.5 h-3.5 rounded bg-zinc-100 dark:bg-zinc-850 border border-zinc-250 dark:border-zinc-800" />
-                  <span>Visited</span>
+                  <span>Unvisited</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3.5 h-3.5 rounded bg-blue-600" />
@@ -469,67 +504,51 @@ export default function TestPage({
         )}
 
         {/* Center: Question Workspace */}
-        <main className="flex-1 bg-zinc-50 dark:bg-zinc-950 p-6 sm:p-8 overflow-y-auto relative flex flex-col justify-between">
+        <main className="flex-1 bg-zinc-50 dark:bg-zinc-950 p-3 sm:p-6 lg:p-8 overflow-y-auto relative flex flex-col justify-between">
           
-          {/* Question Slider Row */}
-          <div className="max-w-4xl mx-auto w-full mb-6 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded-2xl p-4 shadow-sm space-y-3 animate-fade-in select-none">
-            <div className="flex items-center justify-between">
+          {/* Question Box Navigator */}
+          <div className="max-w-4xl mx-auto w-full mb-4 sm:mb-6 bg-white dark:bg-zinc-900 border border-zinc-150 dark:border-zinc-850 rounded-2xl p-4 shadow-sm space-y-3.5 animate-fade-in select-none">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-zinc-100 dark:border-zinc-800/60">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">Question Navigator Slider</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 font-mono">Question Box Navigator</span>
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-mono font-extrabold">
                   Q. {currentQuestionIndex + 1} / {questions.length}
                 </span>
               </div>
               
-              <div className="hidden sm:flex items-center gap-3 text-[9px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded bg-emerald-500" />
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[9px] font-bold uppercase tracking-wider text-zinc-400 font-mono">
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded bg-emerald-600" />
                   <span>Answered</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded bg-purple-600" />
-                  <span>Marked</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded bg-rose-600" />
+                  <span>Unanswered</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded bg-amber-500" />
+                  <span>Review</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded bg-zinc-200 dark:bg-zinc-800" />
+                  <span>Unvisited</span>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-extrabold text-zinc-400 font-mono">1</span>
-              <div className="flex-1 relative flex items-center py-2">
-                {/* Visual Track behind the input */}
-                <div className="absolute left-0 right-0 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full pointer-events-none flex justify-between px-1">
-                  {questions.map((q, idx) => {
-                    const status = getQuestionStatus(q, idx);
-                    let dotColor = "bg-zinc-300 dark:bg-zinc-700";
-                    if (status === "answered") dotColor = "bg-emerald-500";
-                    else if (status === "marked") dotColor = "bg-purple-600";
-                    else if (idx === currentQuestionIndex) dotColor = "bg-blue-600 scale-125";
-                    
-                    return (
-                      <div 
-                        key={q.id} 
-                        className={`w-2 h-2 rounded-full -translate-y-[1px] transition-all duration-300 ${dotColor}`}
-                      />
-                    );
-                  })}
-                </div>
-
-                <input 
-                  type="range"
-                  min="0"
-                  max={questions.length - 1}
-                  value={currentQuestionIndex}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    onUpdateActiveState(prev => ({
-                      ...prev,
-                      currentQuestionIndex: val
-                    }));
-                  }}
-                  className="w-full h-4 appearance-none cursor-pointer bg-transparent relative z-10 opacity-40 hover:opacity-100 focus:outline-none accent-blue-600 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-600 [&::-moz-range-thumb]:border-none"
-                />
-              </div>
-              <span className="text-[10px] font-extrabold text-zinc-400 font-mono">{questions.length}</span>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-24 sm:max-h-32 overflow-y-auto p-1 bg-zinc-50 dark:bg-zinc-950/40 rounded-xl border border-zinc-150/50 dark:border-zinc-800/50">
+              {questions.map((q, idx) => {
+                const boxStyle = getQuestionStyle(idx, false);
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => handlePaletteSelect(idx)}
+                    className={boxStyle}
+                  >
+                    <span>{idx + 1}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
