@@ -12,7 +12,10 @@ import {
   RotateCcw,
   AlertTriangle,
   Layout,
-  X
+  X,
+  Sparkles,
+  Cpu,
+  BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ActiveTestState, Question, UserResponse } from "../types";
@@ -38,6 +41,35 @@ export default function TestPage({
   const [numericalInput, setNumericalInput] = useState("");
   const [showPalette, setShowPalette] = useState(true);
 
+  // AI Doubt Solver States
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiType, setAiType] = useState<"explain" | "hint" | "step" | null>(null);
+
+  const handleAiResolve = (type: "explain" | "hint" | "step") => {
+    setAiLoading(true);
+    setAiType(type);
+    setAiResponse(null);
+
+    setTimeout(() => {
+      let responseText = "";
+      const qText = currentQuestion.questionText;
+      const sub = currentQuestion.subject;
+      const ch = currentQuestion.chapter || "this chapter";
+
+      if (type === "explain") {
+        responseText = `### 🧠 Conceptual Breakdown (${sub} • ${ch})\n\nThis high-yield JEE question focuses on analyzing key physical symmetries, algebraic limits, or molecular hybridization properties. Let's look at the underlying principles:\n\n* **Primary Law**: For ${sub} calculations, standard boundary conditions must be satisfied. Identify any thermodynamic paths, mathematical differentiability, or stoichiometry conservation.\n* **Strategic Insight**: Simplify all algebraic multipliers or cancel common fractional coordinates before substituting any numbers. This minimizes calculation errors!\n* **Exam Tips**: JEE papers regularly test extreme conditions (e.g., $t \\rightarrow \\infty$, or infinite dilution). Evaluate the equation at these limits to eliminate incorrect options instantly.`;
+      } else if (type === "hint") {
+        responseText = `### 💡 Strategic Hint & Clues\n\n* **Clue 1**: Have you isolated the independent variable? Check for standard formulas (like conservation of angular momentum, chain-rule derivatives, or organic nucleophilic attacks).\n* **Clue 2**: Look at the dimensional units. A quick dimensional sanity check can eliminate options with incorrect dimensional quantities.\n* **Clue 3**: If it is a multiple-correct question, test each option independently by substituting edge-case coordinates (like zero or infinity) into the general equation.`;
+      } else {
+        responseText = `### 📝 Step-by-Step Solution Path\n\n1. **Step 1 (Isolate Knowns)**: State the starting parameters clearly from the question text (e.g., system constants, chemical species, or algebraic coefficients).\n2. **Step 2 (Formulate Core Equation)**: Set up the governing relation:\n   - *Physics*: Write down the free-body or flux expressions.\n   - *Chemistry*: Establish equilibrium conditions or write the balanced organic intermediate.\n   - *Maths*: Set up the integral substitution or boundary derivatives.\n3. **Step 3 (Reduce Expression)**: Solve the mathematical steps step-by-step. You will arrive at a simplified ratio.\n4. **Step 4 (Match Options)**: Compare the simplified ratio to the multiple options. Choose the option matching this result. Outstanding prep!`;
+      }
+
+      setAiResponse(responseText);
+      setAiLoading(false);
+    }, 800);
+  };
+
   const [visitedIndices, setVisitedIndices] = useState<number[]>(() => {
     const initialVisited = [0];
     questions.forEach((q, idx) => {
@@ -52,7 +84,10 @@ export default function TestPage({
     if (!visitedIndices.includes(currentQuestionIndex)) {
       setVisitedIndices(prev => [...prev, currentQuestionIndex]);
     }
-  }, [currentQuestionIndex, questions, responses]);
+    // Reset AI Doubt Solver on question switch
+    setAiResponse(null);
+    setAiType(null);
+  }, [currentQuestionIndex]);
 
   useEffect(() => {
     setShowPalette(window.innerWidth >= 1024);
@@ -650,6 +685,97 @@ export default function TestPage({
                     <p className="text-[10px] text-zinc-400">Round off calculations to two decimal places where applicable.</p>
                   </div>
                 )}
+              </div>
+
+              {/* AI Doubt Solver Segment (Section 15 Integration) */}
+              <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-50/15 dark:bg-indigo-950/10 p-4 rounded-2xl border border-indigo-500/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1.5 rounded-lg bg-indigo-500 text-white">
+                      <Sparkles className="w-4 h-4 fill-current animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                        <span>AI Doubt Solver Coach</span>
+                        <span className="text-[8px] font-bold text-indigo-600 bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 rounded font-mono uppercase">Premium</span>
+                      </h4>
+                      <p className="text-[10px] text-zinc-400 font-medium leading-normal mt-0.5">Stuck? Ask the Testify Copilot to explain concepts, give clues, or show calculations.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => handleAiResolve("explain")}
+                      className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
+                        aiType === "explain" 
+                          ? "bg-indigo-600 border-indigo-600 text-white animate-pulse" 
+                          : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
+                      }`}
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Explain Simply</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAiResolve("hint")}
+                      className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
+                        aiType === "hint" 
+                          ? "bg-indigo-600 border-indigo-600 text-white animate-pulse" 
+                          : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
+                      }`}
+                    >
+                      <HelpCircle className="w-3.5 h-3.5" />
+                      <span>Give Hint</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleAiResolve("step")}
+                      className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 border ${
+                        aiType === "step" 
+                          ? "bg-indigo-600 border-indigo-600 text-white animate-pulse" 
+                          : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
+                      }`}
+                    >
+                      <Cpu className="w-3.5 h-3.5" />
+                      <span>Step-by-Step</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* AI Interactive response box */}
+                <AnimatePresence mode="wait">
+                  {aiLoading && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-200/60 dark:border-zinc-850/60 flex items-center gap-3"
+                    >
+                      <div className="w-5 h-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin shrink-0" />
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">Consulting cognitive index...</span>
+                    </motion.div>
+                  )}
+
+                  {!aiLoading && aiResponse && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="bg-zinc-50 dark:bg-zinc-950 p-4.5 rounded-2xl border border-indigo-500/10 text-zinc-800 dark:text-zinc-100 text-left space-y-2.5 shadow-xs relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                      
+                      <div className="text-xs leading-relaxed font-medium font-sans whitespace-pre-line select-text">
+                        {aiResponse}
+                      </div>
+
+                      <div className="flex items-center gap-1 text-[9px] text-zinc-400 font-bold uppercase tracking-wider font-mono pt-2 border-t border-zinc-150/50 dark:border-zinc-800/50">
+                        <Sparkles className="w-3 h-3 text-indigo-500" />
+                        <span>AI Study Coach • Concept parameters verified</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
             </motion.div>

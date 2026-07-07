@@ -38,6 +38,7 @@ import {
   RocketIllustration, 
   BrainIllustration 
 } from "./Illustrations";
+import ProfileAvatar from "./ProfileAvatar";
 
 interface DashboardProps {
   onTabChange: (tab: string) => void;
@@ -47,6 +48,8 @@ interface DashboardProps {
   onContinueActiveTest: () => void;
   onCreateRandomTest: (count?: number, isDailyChallenge?: boolean) => void;
   onSelectHistoryTest: (test: TestResult) => void;
+  equippedAvatar?: string;
+  equippedFrame?: string;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -87,7 +90,9 @@ export default function Dashboard({
   activeTest,
   onContinueActiveTest,
   onCreateRandomTest,
-  onSelectHistoryTest
+  onSelectHistoryTest,
+  equippedAvatar = "default",
+  equippedFrame = "none"
 }: DashboardProps) {
 
   const [examTarget, setExamTarget] = useState<"main" | "advanced">(() => {
@@ -239,12 +244,11 @@ export default function Dashboard({
 
   // Level & XP calculation
   const calculatedLevel = useMemo(() => {
-    return Math.floor(stats.questionsSolved / 50) + 12; // starts at lvl 12
+    return Math.floor(stats.questionsSolved / 50) + 1; // starts at lvl 1 by default
   }, [stats.questionsSolved]);
 
   const calculatedXP = useMemo(() => {
-    const currentLvlXP = (stats.questionsSolved * 60) % 3000;
-    return currentLvlXP + 2350 > 3000 ? (currentLvlXP + 2350) % 3000 : currentLvlXP + 2350;
+    return (stats.questionsSolved * 60) % 3000; // starts at 0 XP
   }, [stats.questionsSolved]);
 
   const quote = useMemo(() => {
@@ -300,14 +304,24 @@ export default function Dashboard({
     <div className="space-y-6 max-w-7xl mx-auto px-1 sm:px-2 select-text text-zinc-900 dark:text-zinc-50">
       
       {/* 1. Welcome Greeting Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-            Welcome back, {userProfile.name}! <span className="animate-bounce">👋</span>
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">
-            Stay consistent today. Success is closer than you think!
-          </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-150 dark:border-zinc-800/80 shadow-xs">
+        <div className="flex items-center gap-4 text-left">
+          <div className="relative">
+            <ProfileAvatar avatar={equippedAvatar} frame={equippedFrame} size="lg" />
+            {equippedAvatar !== "default" && (
+              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full px-1.5 py-0.5 text-[8px] font-bold shadow-xs border border-white dark:border-zinc-900 leading-none">
+                PRO
+              </span>
+            )}
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+              Welcome back, {userProfile.name}! <span className="animate-bounce text-base">👋</span>
+            </h1>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1 font-medium">
+              Stay consistent today. Success is closer than you think!
+            </p>
+          </div>
         </div>
 
         {/* Customizable target triggers */}

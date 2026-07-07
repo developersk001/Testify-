@@ -21,7 +21,12 @@ import {
   Bookmark,
   Bell,
   ChevronRight,
-  Trophy
+  Trophy,
+  Compass,
+  Palette,
+  Target,
+  Tv,
+  Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -48,6 +53,50 @@ import GlobalSearchPage from "./components/GlobalSearchPage";
 import WelcomePage from "./components/WelcomePage";
 import PyqMockTestPage from "./components/PyqMockTestPage";
 
+// Premium Gamified & AI Pages
+import CompanionTreePage from "./components/CompanionTreePage";
+import AiCoachCalendarPage from "./components/AiCoachCalendarPage";
+import ChapterHeatMapPage from "./components/ChapterHeatMapPage";
+import GamificationArenaPage from "./components/GamificationArenaPage";
+import XpStorePage from "./components/XpStorePage";
+import FocusModePage from "./components/FocusModePage";
+import ProfileAvatar from "./components/ProfileAvatar";
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: "motivation" | "new-question" | "test-series" | "achievement" | "system";
+  timestamp: string;
+  read: boolean;
+}
+
+const MOTIVATION_QUOTES = [
+  "Arise, awake, and stop not till the goal is reached. - Swami Vivekananda",
+  "The secret of getting ahead is getting started. Focus on your weakest chemistry and physics topics today!",
+  "Believe you can and you're halfway there. JEE preparation is as much about mindset as it is about study hours.",
+  "Do not let what you cannot do interfere with what you can do. Practice smart!",
+  "The difference between ordinary and extraordinary is that little 'extra'. Solve 5 extra PYQs today!",
+  "Hard work beats talent when talent fails to work hard. Keep practicing!",
+  "You don't have to be great to start, but you have to start to be great. Open the practice panel now!",
+  "Your IIT seat is waiting for you. Every mistake you correct in the Mistake Book is 4 marks earned!"
+];
+
+const NEW_QUESTIONS_ANNOUNCEMENTS = [
+  "Added 10 new high-yield Single Correct questions in Electromagnetism.",
+  "Fresh batch of 15 JEE Advanced Multiple Correct Chemistry questions added.",
+  "Added 12 Assertion-Reason questions on Integration and Limits.",
+  "Added 8 new organic synthesis passage-type questions to the library.",
+  "New 10-question PYQ series uploaded for Mechanics."
+];
+
+const TEST_SERIES_ANNOUNCEMENTS = [
+  "New Test Series: 'JEE Advanced Physics Rotational Masterclass' is now active.",
+  "New Test Series: '15-Minute Inorganic Chemistry Blitz' added to Chapter Tests.",
+  "New Test Series: 'NTA JEE Main Full Mock Exam #4' is live.",
+  "New Test Series: 'Mathematics Coordinate Geometry Marathon' is ready."
+];
+
 export default function App() {
   // Authentication / Profile
   const [username, setUsername] = useState<string>("");
@@ -57,6 +106,58 @@ export default function App() {
   const [currentView, setCurrentView] = useState<string>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Premium Gamification & Shop States
+  const [userXP, setUserXP] = useState<number>(() => {
+    const saved = localStorage.getItem("testify_user_xp");
+    return saved !== null ? Number(saved) : 500; // start with 500 free welcome XP!
+  });
+
+  const [activeTheme, setActiveTheme] = useState<"light" | "dark" | "blue" | "purple">(() => {
+    return (localStorage.getItem("testify_app_theme") as any) || "light";
+  });
+
+  const [equippedAvatar, setEquippedAvatar] = useState<string>(() => {
+    return localStorage.getItem("testify_equipped_avatar") || "default";
+  });
+
+  const [equippedFrame, setEquippedFrame] = useState<string>(() => {
+    return localStorage.getItem("testify_equipped_frame") || "none";
+  });
+
+  const handleAddXP = (amount: number) => {
+    setUserXP(prev => {
+      const next = prev + amount;
+      localStorage.setItem("testify_user_xp", String(next));
+      return next;
+    });
+  };
+
+  const handleDeductXP = (amount: number) => {
+    let success = false;
+    setUserXP(prev => {
+      if (prev >= amount) {
+        const next = prev - amount;
+        localStorage.setItem("testify_user_xp", String(next));
+        success = true;
+        return next;
+      }
+      return prev;
+    });
+    return success;
+  };
+
+  const handleChangeTheme = (theme: "light" | "dark" | "blue" | "purple") => {
+    setActiveTheme(theme);
+    localStorage.setItem("testify_app_theme", theme);
+    if (theme === "dark") {
+      setDarkMode(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      setDarkMode(false);
+      document.documentElement.classList.remove("dark");
+    }
+  };
 
   // Questions Database
   const [questionBank, setQuestionBank] = useState<Question[]>([]);
@@ -70,6 +171,10 @@ export default function App() {
   const [activeTest, setActiveTest] = useState<ActiveTestState | null>(null);
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
+
+  // Notification States
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(true); // Opened by default for new users and fresh sessions
 
   // Sync State utility to keep LocalStorage securely updated
   const syncState = (
@@ -138,7 +243,113 @@ export default function App() {
         }
       } catch (e) {}
     }
+
+    // Load Notifications
+    try {
+      const savedNotifs = localStorage.getItem("testify_notifications");
+      if (savedNotifs) {
+        setNotifications(JSON.parse(savedNotifs));
+      } else {
+        const initialNotifs: AppNotification[] = [
+          {
+            id: "notif-1",
+            title: "Daily Motivation 🌟",
+            message: "Your potential is unlimited. Every PYQ you solve today is a step closer to your IIT dream. Work hard in silence, let your JEE rank make the noise!",
+            type: "motivation",
+            timestamp: "Just Now",
+            read: false
+          },
+          {
+            id: "notif-2",
+            title: "New Test Series Live! 🎯",
+            message: "NTA-pattern 'JEE Advanced Mock Marathon' series is now active! Try full-length Chemistry and Physics challenge tests.",
+            type: "test-series",
+            timestamp: "2 hours ago",
+            read: false
+          },
+          {
+            id: "notif-3",
+            title: "New Questions Uploaded! 📚",
+            message: "15 high-yield multiple correct questions on Coordination Compounds and Kinematics have been added to the database.",
+            type: "new-question",
+            timestamp: "4 hours ago",
+            read: false
+          },
+          {
+            id: "notif-4",
+            title: "Motivational Boost ⚡",
+            message: "Success is not final, failure is not fatal: it is the courage to continue that counts. Keep practicing!",
+            type: "motivation",
+            timestamp: "Yesterday",
+            read: false
+          }
+        ];
+        setNotifications(initialNotifs);
+        localStorage.setItem("testify_notifications", JSON.stringify(initialNotifs));
+      }
+    } catch (e) {
+      console.error("Failed to load notifications:", e);
+    }
   }, []);
+
+  // Automated notification generator
+  const addAutomatedNotification = (type: "motivation" | "new-question" | "test-series") => {
+    let title = "";
+    let message = "";
+    if (type === "motivation") {
+      title = "Daily Motivation Quote 🌟";
+      const quote = MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)];
+      message = `"${quote}" - Keep grinding and practice smarter today!`;
+    } else if (type === "new-question") {
+      title = "New Questions Uploaded! 📚";
+      message = NEW_QUESTIONS_ANNOUNCEMENTS[Math.floor(Math.random() * NEW_QUESTIONS_ANNOUNCEMENTS.length)] + " Check them out in the Question Library.";
+    } else {
+      title = "New Test Series Live! 🎯";
+      message = TEST_SERIES_ANNOUNCEMENTS[Math.floor(Math.random() * TEST_SERIES_ANNOUNCEMENTS.length)] + " Go to Generate Test to start practicing.";
+    }
+
+    const newNotif: AppNotification = {
+      id: "notif-auto-" + Date.now(),
+      title,
+      message,
+      type,
+      timestamp: "Just Now",
+      read: false
+    };
+
+    setNotifications(prev => {
+      const updated = [newNotif, ...prev];
+      localStorage.setItem("testify_notifications", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const saveNotifications = (nextNotifs: AppNotification[]) => {
+    setNotifications(nextNotifs);
+    localStorage.setItem("testify_notifications", JSON.stringify(nextNotifs));
+  };
+
+  // Simulate incoming real-time notifications
+  useEffect(() => {
+    if (username) {
+      const timer = setTimeout(() => {
+        const types: Array<"motivation" | "new-question" | "test-series"> = ["motivation", "new-question", "test-series"];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+        addAutomatedNotification(randomType);
+      }, 6000);
+
+      const interval = setInterval(() => {
+        const types: Array<"motivation" | "new-question" | "test-series"> = ["motivation", "new-question", "test-series"];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+        addAutomatedNotification(randomType);
+      }, 180000);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+      };
+    }
+  }, [username]);
 
   // Sync Dark mode toggles
   const toggleDarkMode = () => {
@@ -203,6 +414,21 @@ export default function App() {
     setShowResumeBanner(false);
     setCurrentView("active-test");
     syncState(username, testHistory, bookmarks, mistakeNotes, testState);
+  };
+
+  const handleGenerateTestWithChapter = (subject: SubjectType, chapter: string) => {
+    const config: TestConfig = {
+      id: "CHP-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+      exam: "Mixed",
+      years: [],
+      subjects: [subject],
+      totalQuestions: 5,
+      subjectDistribution: { Physics: subject === "Physics" ? 5 : 0, Chemistry: subject === "Chemistry" ? 5 : 0, Mathematics: subject === "Mathematics" ? 5 : 0 },
+      difficulty: "Mixed",
+      timeLimit: 15,
+      chapters: [chapter]
+    };
+    handleGenerateTest(config);
   };
 
   // Evaluation & Grading Logic
@@ -320,6 +546,24 @@ export default function App() {
     setTestHistory(updatedHistory);
     setMistakeNotes(currentMistakes);
 
+    // Award XP based on mock score performance
+    const earnedXP = correct * 30 + (accuracy >= 80 ? 100 : 0);
+    handleAddXP(earnedXP);
+
+    const completedNotif: AppNotification = {
+      id: "notif-test-" + Date.now(),
+      title: "Mock Test Submitted! 🏆",
+      message: `You successfully completed the ${config.exam} Mock Test. Scored ${score}/${totalMarks} (${accuracy}% Accuracy). Weak chapters logged to Mistake Book.`,
+      type: "achievement",
+      timestamp: "Just Now",
+      read: false
+    };
+    setNotifications(prev => {
+      const updated = [completedNotif, ...prev];
+      localStorage.setItem("testify_notifications", JSON.stringify(updated));
+      return updated;
+    });
+
     // Reset session states
     setActiveTest(null);
     setSelectedResult(result);
@@ -330,6 +574,7 @@ export default function App() {
   // Toggle/Manage Bookmarks
   const handleBookmarkQuestion = (qId: string) => {
     let nextBookmarks = [...bookmarks];
+    const isAdding = !nextBookmarks.includes(qId);
     if (nextBookmarks.includes(qId)) {
       nextBookmarks = nextBookmarks.filter(id => id !== qId);
     } else {
@@ -337,6 +582,22 @@ export default function App() {
     }
     setBookmarks(nextBookmarks);
     syncState(username, testHistory, nextBookmarks, mistakeNotes, activeTest);
+
+    if (isAdding) {
+      const bookmarkNotif: AppNotification = {
+        id: "notif-bookmark-" + Date.now(),
+        title: "Question Bookmarked 🔖",
+        message: "A tricky question has been added to your Bookmarks & Revision terminal for future review.",
+        type: "system",
+        timestamp: "Just Now",
+        read: false
+      };
+      setNotifications(prev => {
+        const updated = [bookmarkNotif, ...prev];
+        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+        return updated;
+      });
+    }
   };
 
   // Manage Mistakes Notes
@@ -412,7 +673,13 @@ export default function App() {
   // Navigation Panel Definitions
   const NAV_ITEMS = [
     { id: "dashboard", label: "Dashboard", icon: Home },
-    { id: "jee-pyqs", label: "JEE PYQ Mock Tests", icon: Trophy },
+    { id: "arena", label: "Gamification Arena", icon: Trophy },
+    { id: "companion-tree", label: "Companion & Tree", icon: Compass },
+    { id: "coach-calendar", label: "AI Coach & Calendar", icon: BookOpen },
+    { id: "heat-map", label: "Mastery Heat Map", icon: Target },
+    { id: "focus-mode", label: "Focus Mode Terminal", icon: Tv },
+    { id: "xp-store", label: "Premium XP Shop", icon: Palette },
+    { id: "jee-pyqs", label: "JEE PYQ Mock Tests", icon: Award },
     { id: "create-test", label: "Generate Test", icon: Sliders },
     { id: "revision", label: "Revision Terminal", icon: BookOpenCheck },
     { id: "mistake-book", label: "Mistake Book", icon: ShieldAlert },
@@ -511,13 +778,15 @@ export default function App() {
             <div className="flex items-center gap-2">
               {/* Notification bell with badge */}
               <button 
-                onClick={() => setCurrentView("dashboard")}
+                onClick={() => setIsNotificationsOpen(true)}
                 className="relative p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center">
-                  3
-                </span>
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center animate-pulse">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
               </button>
 
               {/* Character Avatar */}
@@ -745,10 +1014,8 @@ export default function App() {
                   </div>
 
                   {/* Profile info inside mobile drawer */}
-                  <div className="border-t border-zinc-100 dark:border-zinc-850 pt-4 flex items-center gap-3">
-                    <div className="w-9 h-9 bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold rounded-full flex items-center justify-center text-xs">
-                      {username.slice(0, 2).toUpperCase()}
-                    </div>
+                  <div className="border-t border-zinc-100 dark:border-zinc-850 pt-4 flex items-center gap-3 cursor-pointer" onClick={() => { setCurrentView("settings"); setMobileMenuOpen(false); }}>
+                    <ProfileAvatar avatar={equippedAvatar} frame={equippedFrame} size="sm" />
                     <div className="flex-1 space-y-0.5 truncate select-none">
                       <h5 className="font-bold text-xs truncate text-zinc-800 dark:text-zinc-100">{username}</h5>
                       <span className="text-[10px] text-zinc-400 font-mono">JEE Main Aspirant</span>
@@ -808,27 +1075,30 @@ export default function App() {
                   <span>{streakVal} Day Streak</span>
                 </div>
 
+                <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs bg-indigo-500/10 dark:bg-indigo-500/20 px-3.5 py-1.5 rounded-xl border border-indigo-500/10 shadow-xs">
+                  <Sparkles className="w-4 h-4 text-indigo-500 fill-current" />
+                  <span>{userXP} XP</span>
+                </div>
+
                 {/* Bell notification with badge */}
                 <button 
-                  onClick={() => setCurrentView("dashboard")}
+                  onClick={() => setIsNotificationsOpen(true)}
                   className="relative p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
                 >
                   <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center border border-white dark:border-zinc-900 animate-pulse">
-                    3
-                  </span>
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-[8px] font-bold text-white rounded-full flex items-center justify-center border border-white dark:border-zinc-900 animate-pulse">
+                      {notifications.filter(n => !n.read).length}
+                    </span>
+                  )}
                 </button>
 
                 {/* Profile Character Avatar */}
                 <button 
                   onClick={() => setCurrentView("settings")}
-                  className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/30 overflow-hidden flex items-center justify-center relative shadow-inner cursor-pointer"
+                  className="relative cursor-pointer transition-transform hover:scale-105 active:scale-95"
                 >
-                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400 absolute bottom-0" viewBox="0 0 64 64" fill="currentColor">
-                    <circle cx="32" cy="24" r="14" fill="#FDBA74" />
-                    <path d="M18 64c0-8.5 7.5-14 14-14s14 5.5 14 14H18z" fill="#3B82F6" />
-                    <path d="M32 6c-8 0-14 5-14 12 0 4 3 6 3 6s2-5 5-5c4 0 3 3 6 3s2-3 6-3c3 0 5 5 5 5s3-2 3-6c0-7-6-12-14-12z" fill="#1E293B" />
-                  </svg>
+                  <ProfileAvatar avatar={equippedAvatar} frame={equippedFrame} size="sm" />
                 </button>
               </div>
             </div>
@@ -844,6 +1114,8 @@ export default function App() {
               >
                 {currentView === "dashboard" && (
                   <Dashboard 
+                    equippedAvatar={equippedAvatar}
+                    equippedFrame={equippedFrame}
                     userProfile={{
                       name: username,
                       joinedAt: new Date().toISOString(),
@@ -967,6 +1239,159 @@ export default function App() {
                     bookmarkedQuestionIds={bookmarks}
                   />
                 )}
+
+                {currentView === "arena" && (
+                  <GamificationArenaPage 
+                    userXP={userXP}
+                    username={username}
+                    onAddXP={handleAddXP}
+                    onLaunchRandomTest={(count, isDaily) => {
+                      const randomConfig: TestConfig = {
+                        id: "ARENA-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                        exam: "Mixed",
+                        years: [],
+                        subjects: ["Physics", "Chemistry", "Mathematics"],
+                        totalQuestions: count || 10,
+                        subjectDistribution: { Physics: 3, Chemistry: 3, Mathematics: 4 },
+                        difficulty: "Mixed",
+                        timeLimit: isDaily ? 15 : 30,
+                        chapters: []
+                      };
+                      handleGenerateTest(randomConfig);
+                    }}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-arena-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
+
+                {currentView === "companion-tree" && (
+                  <CompanionTreePage 
+                    userXP={userXP}
+                    onDeductXP={handleDeductXP}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-tree-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
+
+                {currentView === "coach-calendar" && (
+                  <AiCoachCalendarPage 
+                    history={testHistory}
+                    onTabChange={(tab) => setCurrentView(tab)}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-coach-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
+
+                {currentView === "heat-map" && (
+                  <ChapterHeatMapPage 
+                    history={testHistory}
+                    onTabChange={(tab) => setCurrentView(tab)}
+                    onGenerateTestWithChapter={handleGenerateTestWithChapter}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-map-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
+
+                {currentView === "focus-mode" && (
+                  <FocusModePage 
+                    onAddXP={handleAddXP}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-focus-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
+
+                {currentView === "xp-store" && (
+                  <XpStorePage 
+                    userXP={userXP}
+                    onDeductXP={handleDeductXP}
+                    activeTheme={activeTheme}
+                    onChangeTheme={handleChangeTheme}
+                    equippedAvatar={equippedAvatar}
+                    setEquippedAvatar={setEquippedAvatar}
+                    equippedFrame={equippedFrame}
+                    setEquippedFrame={setEquippedFrame}
+                    onAddNotification={(title, msg, type) => {
+                      const newNotif: AppNotification = {
+                        id: "notif-store-" + Date.now(),
+                        title,
+                        message: msg,
+                        type,
+                        timestamp: "Just Now",
+                        read: false
+                      };
+                      setNotifications(prev => {
+                        const updated = [newNotif, ...prev];
+                        localStorage.setItem("testify_notifications", JSON.stringify(updated));
+                        return updated;
+                      });
+                    }}
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
 
@@ -979,6 +1404,205 @@ export default function App() {
               </p>
             </footer>
           </main>
+
+          {/* Sliding Notifications Panel Drawer */}
+          <AnimatePresence>
+            {isNotificationsOpen && (
+              <>
+                {/* Dark backdrop overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.4 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsNotificationsOpen(false)}
+                  className="fixed inset-0 bg-black z-[90]"
+                />
+
+                {/* Sliding Drawer Container */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
+                  className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-zinc-900 border-l border-zinc-150 dark:border-zinc-800 z-[100] shadow-2xl flex flex-col"
+                >
+                  {/* Drawer Header */}
+                  <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <Bell className="w-4.5 h-4.5" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white leading-tight">Live JEE Updates</h3>
+                        <p className="text-[10px] text-zinc-400 font-medium leading-tight">Testify Automated Notifications</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => setIsNotificationsOpen(false)}
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Action bar inside Drawer */}
+                  <div className="px-5 py-2.5 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px] font-bold text-zinc-500">
+                    <span>{notifications.filter(n => !n.read).length} Unread Updates</span>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => {
+                          const marked = notifications.map(n => ({ ...n, read: true }));
+                          saveNotifications(marked);
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 font-bold"
+                      >
+                        Mark all read
+                      </button>
+                      <span className="text-zinc-300">|</span>
+                      <button 
+                        onClick={() => saveNotifications([])}
+                        className="text-rose-600 hover:underline cursor-pointer bg-transparent border-none p-0 font-bold"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notification List Scrollable */}
+                  <div className="flex-1 overflow-y-auto p-5 space-y-3.5">
+                    {notifications.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center space-y-3 my-auto py-12">
+                        <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center border border-zinc-100 dark:border-zinc-850">
+                          <Bell className="w-7 h-7 text-zinc-300" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-zinc-700 dark:text-zinc-300">No Notifications Yet</h4>
+                          <p className="text-[10px] text-zinc-400 max-w-xs mx-auto mt-1 leading-relaxed">
+                            We will notify you here when you complete tests, bookmark questions, or when new motivation quotes and mock papers are uploaded!
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => {
+                        const isUnread = !notif.read;
+                        return (
+                          <div 
+                            key={notif.id}
+                            onClick={() => {
+                              if (isUnread) {
+                                const updated = notifications.map(n => n.id === notif.id ? { ...n, read: true } : n);
+                                saveNotifications(updated);
+                              }
+                            }}
+                            className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden group cursor-pointer ${
+                              isUnread 
+                                ? "bg-blue-50/40 dark:bg-blue-950/10 border-blue-100/50 dark:border-blue-900/35 shadow-xs" 
+                                : "bg-white dark:bg-zinc-900/60 border-zinc-150 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-850/40"
+                            }`}
+                          >
+                            {/* Blue indicator for unread */}
+                            {isUnread && (
+                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+                            )}
+
+                            <div className="flex gap-3">
+                              {/* Left Icon depending on notification type */}
+                              <div className="shrink-0 mt-0.5">
+                                {notif.type === "motivation" && (
+                                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-sm">
+                                    🌟
+                                  </div>
+                                )}
+                                {notif.type === "new-question" && (
+                                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-sm">
+                                    📚
+                                  </div>
+                                )}
+                                {notif.type === "test-series" && (
+                                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-sm">
+                                    🎯
+                                  </div>
+                                )}
+                                {notif.type === "achievement" && (
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-sm">
+                                    🏆
+                                  </div>
+                                )}
+                                {notif.type === "system" && (
+                                  <div className="w-8 h-8 rounded-xl bg-zinc-500/10 text-zinc-500 flex items-center justify-center font-bold text-sm">
+                                    🔖
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Right Content */}
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex items-start justify-between gap-1.5">
+                                  <h4 className={`text-xs font-bold truncate ${isUnread ? "text-zinc-950 dark:text-white" : "text-zinc-700 dark:text-zinc-300"}`}>
+                                    {notif.title}
+                                  </h4>
+                                  <span className="text-[9px] font-medium text-zinc-400 whitespace-nowrap font-mono">{notif.timestamp}</span>
+                                </div>
+                                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
+                                  {notif.message}
+                                </p>
+                                
+                                {/* Unread dot */}
+                                {isUnread && (
+                                  <div className="pt-1 flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                    <span className="text-[9px] text-blue-500 font-bold">Unread update</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Delete button on hover */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const filtered = notifications.filter(n => n.id !== notif.id);
+                                  saveNotifications(filtered);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-zinc-400 hover:text-rose-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all cursor-pointer self-start -mr-1 bg-transparent border-none"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Quick Simulator Buttons Footer */}
+                  <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 space-y-2.5">
+                    <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider text-left pl-1 leading-none">Simulator (Trigger Live Automated Updates)</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        onClick={() => addAutomatedNotification("motivation")}
+                        className="py-2 px-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-all border border-amber-500/10 active:scale-95 cursor-pointer"
+                      >
+                        🌟 Motivation
+                      </button>
+                      <button 
+                        onClick={() => addAutomatedNotification("new-question")}
+                        className="py-2 px-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-bold transition-all border border-blue-500/10 active:scale-95 cursor-pointer"
+                      >
+                        📚 Qs Drop
+                      </button>
+                      <button 
+                        onClick={() => addAutomatedNotification("test-series")}
+                        className="py-2 px-1 rounded-xl bg-purple-500/10 hover:bg-purple-500/15 text-purple-600 dark:text-purple-400 text-[10px] font-bold transition-all border border-purple-500/10 active:scale-95 cursor-pointer"
+                      >
+                        🎯 Series Live
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Mobile Bottom Navigation Bar matching the image */}
           <div className="md:hidden fixed bottom-0 left-0 right-0 z-45 bg-white dark:bg-zinc-900 border-t border-zinc-150 dark:border-zinc-800 px-3 py-2 flex items-center justify-around shadow-lg">
